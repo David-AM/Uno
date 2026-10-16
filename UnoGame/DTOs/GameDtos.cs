@@ -15,4 +15,4 @@ public sealed record PlayerPlayDto(int PlayerId, string PlayerName, CardDto Card
 public sealed record GameViewDto(string GameId, string Status, string? Winner, int HumanPlayerId,
     IReadOnlyList<PlayerDto> Players, IReadOnlyList<CardDto> Hand, CardDto? TopCard, CardColor ActiveColor,
     int DrawPileCount, bool HasDrawnThisTurn, string Direction, string? Message, string? AlertMessage,
-    IReadOnlyList<PlayerPlayDto> RecentPlays);
+    int AlertVersion, IReadOnlyList<PlayerPlayDto> RecentPlays);

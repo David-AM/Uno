@@ -58,7 +58,7 @@ All responses are JSON. Invalid actions return `400` with an `error` message; mi
 | `POST` | `/api/games/{gameId}/catch-uno` | Catch an opponent who has one card and did not declare |
 | `POST` | `/api/games/{gameId}/restart` | Start a new round in the same game |
 
-The AI plays legal cards, chooses its most common non-Wild color, draws when needed, and uses the same game controller as the human. Draw Two and Wild Draw Four automatically make the next player draw the penalty cards and lose that turn; the client announces this in the highlighted alert banner. Wild Draw Four is restricted when the player holds a card matching the active color. Opponent hands and the draw pile contents are never included in API responses.
+The AI plays legal cards, chooses its most common non-Wild color, calls UNO before playing down to one card, draws when needed, and uses the same game controller as the human. Draw Two and Wild Draw Four automatically make the next player draw the penalty cards and lose that turn. A player who goes from two cards to one without calling UNO first immediately draws four cards. The client presents penalties as SweetAlert toasts, animates each played card toward the discard pile, and automatically passes two seconds after a draw if the drawn card is not played. Wild Draw Four is restricted when the player holds a card matching the active color. Opponent hands and the draw pile contents are never included in API responses.
 
 ## Tests
 

@@ -20,6 +20,7 @@ public sealed class GameController
     public event Action<CardColor>? OnColorChanged;
     public event Action<Player, int>? OnCardsDrawn;
     public event Action<Player, int>? OnPenaltyCardsDrawn;
+    public event Action<Player, int>? OnUnoPenalty;
     public event Action<Player, int>? OnRoundEnded;
     public event Action<Player>? OnGameEnded;
     public event Action<Player>? OnPlayerCardRemainOne;
@@ -48,6 +49,7 @@ public sealed class GameController
     {
         _table.DrawPile.Cards.Clear(); _table.DiscardPile.Cards.Clear();
         foreach (var hand in _cardInHands.Values) hand.Clear();
+        foreach (var player in _hasSaidUno.Keys) _hasSaidUno[player] = false;
         _currentPlayerIndex = 0; _direction = TurnDirection.Clockwise; _nextDrawPenalty = 0; _skipNext = false; _hasDrawnThisTurn = false; Winner = null;
         InitializeStandardDeck(); ShuffleDeck();
         foreach (var player in _players) for (var i = 0; i < 7; i++) DrawCardFromDeckOnly(player);
@@ -84,8 +86,12 @@ public sealed class GameController
         RemoveCardFromHand(player, card); _table.DiscardPile.Cards.Add(card);
         _table.ActiveColor = card.Color == CardColor.Wild ? chosenColor!.Value : card.Color;
         if (card.Color == CardColor.Wild) OnColorChanged?.Invoke(_table.ActiveColor);
-        _hasSaidUno[player] = false; OnCardPlayed?.Invoke(player, card);
-        if (_cardInHands[player].Count == 1) OnPlayerCardRemainOne?.Invoke(player);
+        OnCardPlayed?.Invoke(player, card);
+        if (_cardInHands[player].Count == 1)
+        {
+            if (_hasSaidUno[player]) OnPlayerCardRemainOne?.Invoke(player);
+            else { ForceDrawCards(player, 4); OnUnoPenalty?.Invoke(player, 4); }
+        }
         if (CheckGameWinner() is not null) return true;
         switch (card.Action)
         {
@@ -100,12 +106,13 @@ public sealed class GameController
     {
         if (IsGameOver || !ReferenceEquals(GetCurrentPlayer(), player)) return null;
         var card = DrawCardFromDeckOnly(player);
+        _hasSaidUno[player] = false;
         _hasDrawnThisTurn = true;
         if (card is not null) OnCardsDrawn?.Invoke(player, 1);
         return card;
     }
-    public void PassTurn(Player player) { if (!ReferenceEquals(GetCurrentPlayer(), player)) throw new InvalidOperationException("It is not this player's turn."); if (!_hasDrawnThisTurn) throw new InvalidOperationException("Draw a card before passing."); NextTurn(); }
-    public void SayUno(Player player) { if (GetPlayerHand(player).Count == 2) _hasSaidUno[player] = true; }
+    public void PassTurn(Player player) { if (!ReferenceEquals(GetCurrentPlayer(), player)) throw new InvalidOperationException("It is not this player's turn."); if (!_hasDrawnThisTurn) throw new InvalidOperationException("Draw a card before passing."); _hasSaidUno[player] = false; NextTurn(); }
+    public void SayUno(Player player) { if (ReferenceEquals(GetCurrentPlayer(), player) && GetPlayerHand(player).Count == 2) _hasSaidUno[player] = true; }
     public void CatchPlayer(Player caller, Player target)
     {
         if (GetPlayerHand(target).Count == 1 && !_hasSaidUno[target]) { for (var i = 0; i < 2; i++) DrawCardFromDeckOnly(target); OnCardsDrawn?.Invoke(target, 2); }

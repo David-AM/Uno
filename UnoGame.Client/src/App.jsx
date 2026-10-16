@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5124/api';
 const colors = ['Red', 'Blue', 'Green', 'Yellow'];
@@ -58,6 +60,21 @@ function App() {
   }, [game?.gameId, game?.status]);
 
   useEffect(() => {
+    if (!game?.alertMessage || !game.alertVersion) return undefined;
+    Swal.fire({
+      toast: true,
+      position: 'top',
+      icon: 'warning',
+      title: game.alertMessage,
+      showConfirmButton: false,
+      timer: 4200,
+      timerProgressBar: true,
+      customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' },
+    });
+    return () => Swal.close();
+  }, [game?.alertMessage, game?.alertVersion]);
+
+  useEffect(() => {
     if (!game?.recentPlays?.length) return;
     setAnimationQueue(queue => [...queue, ...game.recentPlays.map((play, index) => ({ ...play, animationId: `${Date.now()}-${index}-${Math.random()}` }))]);
   }, [game?.recentPlays]);
@@ -94,24 +111,23 @@ function App() {
   const canDraw = isYourTurn;
   const animatedSeat = activePlay && game.players.findIndex(player => player.id === activePlay.playerId);
   return <main className="game-shell">
-    <header className="game-header"><a className="brand" href="#" onClick={e => { e.preventDefault(); setGame(null); }}><span className="brand-mark">U</span><span>TABLE <b>CLUB</b></span></a><div className="round-label"><span className="live-dot" /> FRIENDLY GAME <span className="round-divider">/</span> ROUND 01</div><button className="icon-button" title="Start a new round" onClick={restart} disabled={busy}>↻ <span>New round</span></button></header>
+    <header className="game-header"><a className="brand" href="#" onClick={e => { e.preventDefault(); setGame(null); }}><span className="brand-mark">U</span><span>TABLE <b>CLUB</b></span></a><div className="round-label"><span className="live-dot" /> FRIENDLY GAME <span className="round-divider">/</span> ROUND 01</div><button className="icon-button" title="Start a new round" onClick={restart} disabled={busy || Boolean(activePlay) || animationQueue.length > 0}>↻ <span>New round</span></button></header>
     <section className="table-area">
       <div className="opponent-row">{opponentsList.map((player, index) => <div className={`opponent ${player.isCurrentPlayer ? 'active' : ''}`} key={player.id}>
-        <div className={`avatar avatar-${index}`}>{player.name.slice(0, 1).toUpperCase()}</div><div><strong>{player.name}</strong><span>{player.cardCount} {player.cardCount === 1 ? 'card' : 'cards'}</span></div>{player.isCurrentPlayer && <span className="turn-badge">THINKING</span>}{player.cardCount === 1 && <button className="catch-button" disabled={busy || game.status !== 'playing'} onClick={() => catchUno(player.id)}>CATCH UNO</button>}
+        <div className={`avatar avatar-${index}`}>{player.name.slice(0, 1).toUpperCase()}</div><div><strong>{player.name}</strong><span>{player.cardCount} {player.cardCount === 1 ? 'card' : 'cards'}</span></div>{player.isCurrentPlayer && <span className="turn-badge">THINKING</span>}{player.cardCount === 1 && <button className="catch-button" disabled={busy || Boolean(activePlay) || animationQueue.length > 0 || game.status !== 'playing'} onClick={() => catchUno(player.id)}>CATCH UNO</button>}
       </div>)}</div>
       <div className="felt"><div className="table-stitch" /><div className="table-topline"><span>THE TABLE</span><span className="direction">{game.direction === 'Clockwise' ? '↻' : '↺'} &nbsp;{game.direction}</span></div>
-        <div className="pile-row"><div className="pile-wrap"><div className="pile-count">{game.drawPileCount}</div><button className="draw-pile" onClick={draw} disabled={!canDraw || busy} aria-label="Draw a card"><span>U</span><i>UNO</i></button><span className="pile-caption">DRAW PILE</span></div>
+        <div className="pile-row"><div className="pile-wrap"><div className="pile-count">{game.drawPileCount}</div><button className="draw-pile" onClick={draw} disabled={!canDraw || busy || Boolean(activePlay) || animationQueue.length > 0} aria-label="Draw a card"><span>U</span><i>UNO</i></button><span className="pile-caption">DRAW PILE</span></div>
           <div className="turn-arrow">→</div><div className="discard-wrap">{game.topCard && <CardFace card={game.topCard} />}<span className="pile-caption">DISCARD PILE</span></div></div>
         <div className="active-color"><span>IN PLAY</span><i className={`color-dot ${colorsClass[game.activeColor]}`} />{game.activeColor}</div>
       </div>
       <div className="status-line" role="status" aria-live="polite"><div className="status-icon">✳</div><span>{game.message || (isYourTurn ? 'Your turn. Find a match.' : 'The table is playing…')}</span>{isYourTurn && <b>YOUR TURN</b>}</div>
     </section>
-    <section className="hand-area"><div className="hand-heading"><div><p className="eyebrow">YOUR HAND</p><h2>{human.name}<span>{game.hand.length} cards</span></h2></div><div className="hand-actions"><button className="subtle-button" onClick={uno} disabled={!isYourTurn || busy || game.hand.length !== 1}>✳ &nbsp;Call UNO</button></div></div>
+    <section className="hand-area"><div className="hand-heading"><div><p className="eyebrow">YOUR HAND</p><h2>{human.name}<span>{game.hand.length} cards</span></h2></div><div className="hand-actions"><button className="subtle-button" onClick={uno} disabled={!isYourTurn || busy || Boolean(activePlay) || animationQueue.length > 0 || game.hand.length !== 2}>✳ &nbsp;Call UNO</button></div></div>
       <div className="hand-cards">{game.hand.map(card => <CardFace key={card.id} card={card} disabled={!isYourTurn || busy || Boolean(activePlay) || animationQueue.length > 0} onClick={() => card.color === 'Wild' ? setWildCard(card) : play(card)} />)}</div>
       {error && <p className="error-message game-error">{error}</p>}
     </section>
     <footer className="game-footer"><span>PLAY A MATCHING COLOR OR SYMBOL</span><span>DRAWN CARDS PASS AFTER 2 SECONDS</span></footer>
-    {game.alertMessage && <div className="floating-alert" role="alert" aria-live="assertive"><span>⚠</span>{game.alertMessage}</div>}
     {activePlay && <div className={`play-flight from-seat-${animatedSeat}`} key={activePlay.animationId} aria-hidden="true"><span>{activePlay.playerName}</span><CardFace card={activePlay.card} disabled /></div>}
     {wildCard && <div className="modal-backdrop" role="presentation" onClick={() => setWildCard(null)}><section className="color-modal" role="dialog" aria-modal="true" aria-labelledby="color-title" onClick={e => e.stopPropagation()}><button className="close-modal" onClick={() => setWildCard(null)}>×</button><p className="eyebrow">A WILD MOVE</p><h2 id="color-title">Choose a color</h2><p>Set the color that continues the round.</p><div className="color-options">{colors.map(color => <button key={color} className={`color-choice ${colorsClass[color]}`} onClick={() => { const selected = wildCard; setWildCard(null); play(selected, color); }}><span />{color}</button>)}</div></section></div>}
     {game.status === 'completed' && <div className="modal-backdrop"><section className="color-modal result-modal"><div className="result-star">✳</div><p className="eyebrow">ROUND COMPLETE</p><h2>{game.winner === human.name ? 'You did it!' : `${game.winner} wins!`}</h2><p>{game.winner === human.name ? 'A very well played round.' : 'There is always another round.'}</p><button className="primary-button" onClick={restart}>Play again <span>↻</span></button></section></div>}

@@ -26,6 +26,7 @@ public sealed class GameService : IGameService
         public GameController Game { get; set; } = game;
         public string? Message { get; set; }
         public string? AlertMessage { get; set; }
+        public int AlertVersion { get; set; }
         public List<PlayerPlayDto> RecentPlays { get; } = [];
         public object Gate { get; } = new();
     }
@@ -88,7 +89,7 @@ public sealed class GameService : IGameService
     public GameViewDto? SayUno(string id, out string? error)
     {
         error = null; if (!_games.TryGetValue(id, out var s)) return null;
-        lock (s.Gate) { if (s.Game.GetPlayerHand(s.Human).Count != 1) error = "Declare UNO when you have one card remaining."; else { s.Game.SayUno(s.Human); s.Message = "UNO!"; } return View(s); }
+        lock (s.Gate) { if (s.Game.GetCurrentPlayer() != s.Human || s.Game.GetPlayerHand(s.Human).Count != 2) error = "Call UNO on your turn before playing with two cards."; else { s.Game.SayUno(s.Human); s.Message = "UNO called. Play a card to go down to one."; } return View(s); }
     }
     public GameViewDto? CatchUno(string id, int targetPlayerId, out string? error)
     {
@@ -120,6 +121,7 @@ public sealed class GameService : IGameService
                 if (drawn is not null && game.CanPlayThisCard(drawn)) playable = drawn;
                 else { game.PassTurn(ai); continue; }
             }
+            if (hand.Count == 2) game.SayUno(ai);
             var color = playable.Color == CardColor.Wild ? hand.Where(c => c.Color != CardColor.Wild).GroupBy(c => c.Color).OrderByDescending(g => g.Count()).Select(g => (CardColor?)g.Key).FirstOrDefault() ?? CardColor.Red : (CardColor?)null;
             game.PlayCard(ai, playable, color); s.Message = $"{ai.Name} played {CardName(playable)}.";
         }
@@ -127,8 +129,14 @@ public sealed class GameService : IGameService
     private static string CardName(Card card) => card.Color == CardColor.Wild ? card.Action == ActionType.WildDrawFour ? "Wild Draw Four" : "Wild" : $"{card.Color} {card.Action?.ToString() ?? card.Value?.ToString()}";
     private static void WatchGameEvents(Session session, GameController game)
     {
-        game.OnPenaltyCardsDrawn += (player, count) => session.AlertMessage = $"{player.Name} drew {count} penalty cards.";
+        game.OnPenaltyCardsDrawn += (player, count) => AppendAlert(session, $"{player.Name} drew {count} penalty cards.");
+        game.OnUnoPenalty += (player, count) => AppendAlert(session, $"{player.Name} forgot to call UNO and drew {count} cards.");
         game.OnCardPlayed += (player, card) => session.RecentPlays.Add(new PlayerPlayDto(player.Id, player.Name, CardDto.From(card)));
+    }
+    private static void AppendAlert(Session session, string message)
+    {
+        session.AlertMessage = session.AlertMessage is null ? message : $"{session.AlertMessage} {message}";
+        session.AlertVersion++;
     }
     private static GameViewDto View(Session s, bool includeRecentPlays = false)
     {
@@ -138,6 +146,6 @@ public sealed class GameService : IGameService
         return new GameViewDto(s.Id, g.IsGameOver ? "completed" : "playing", g.Winner?.Name, s.Human.Id,
             s.Players.Select(p => new PlayerDto(p.Id, p.Name, g.GetPlayerHand(p).Count, p == g.GetCurrentPlayer(), p == s.Human)).ToArray(),
             hand.Select(CardDto.From).ToArray(), g.GetTopCard() is { } top ? CardDto.From(top) : null, g.GetActiveColor(), g.Table.DrawPile.TotalCards,
-            g.HasDrawnThisTurn, g.Direction.ToString(), s.Message, s.AlertMessage, recentPlays);
+            g.HasDrawnThisTurn, g.Direction.ToString(), s.Message, s.AlertMessage, s.AlertVersion, recentPlays);
     }
 }
