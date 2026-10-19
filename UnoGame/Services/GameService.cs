@@ -13,7 +13,7 @@ public interface IGameService
     GameViewDto? Pass(string id, out string? error);
     GameViewDto? SayUno(string id, out string? error);
     GameViewDto? CatchUno(string id, int targetPlayerId, out string? error);
-    GameViewDto? Restart(string id);
+    GameViewDto? Restart(string id, bool resetScores = false);
 }
 
 public sealed class GameService : IGameService
@@ -27,7 +27,9 @@ public sealed class GameService : IGameService
         public string? Message { get; set; }
         public string? AlertMessage { get; set; }
         public int AlertVersion { get; set; }
+        public int RoundNumber { get; set; } = 1;
         public List<PlayerPlayDto> RecentPlays { get; } = [];
+        public List<GameEventDto> RecentEvents { get; } = [];
         public object Gate { get; } = new();
     }
     private readonly ConcurrentDictionary<string, Session> _games = new();
@@ -40,6 +42,7 @@ public sealed class GameService : IGameService
         var game = new GameController(players); game.StartGame();
         var session = new Session(Guid.NewGuid().ToString("N"), players[0], players, game);
         WatchGameEvents(session, game);
+        session.RecentEvents.Add(new GameEventDto("table", null, null, CardDto.From(game.GetTopCard()!), string.Empty, game.GetPlayerHand(session.Human).Select(CardDto.From).ToArray()));
         _games[session.Id] = session;
         RunAiTurns(session);
         return View(session, includeRecentPlays: true);
@@ -67,11 +70,12 @@ public sealed class GameService : IGameService
         {
             if (s.Game.IsGameOver || s.Game.GetCurrentPlayer() != s.Human) { error = "It is not your turn."; return View(s); }
             s.AlertMessage = null;
+            s.RecentPlays.Clear();
             var count = s.Game.GetPlayerHand(s.Human).Count;
             var card = s.Game.DrawCard(s.Human);
             s.Message = card is null && s.Game.GetPlayerHand(s.Human).Count > count ? "You drew the penalty cards." : card is null && s.Game.GetCurrentPlayer() == s.Human ? "The draw pile is empty. You may pass." : card is null ? "You drew the penalty cards." : "You drew a card. Play it if it matches, or pass.";
             if (s.Game.GetCurrentPlayer() != s.Human) RunAiTurns(s);
-            return View(s);
+            return View(s, includeRecentPlays: true);
         }
     }
     public GameViewDto? Pass(string id, out string? error)
@@ -102,10 +106,10 @@ public sealed class GameService : IGameService
             return View(s);
         }
     }
-    public GameViewDto? Restart(string id)
+    public GameViewDto? Restart(string id, bool resetScores = false)
     {
         if (!_games.TryGetValue(id, out var s)) return null;
-        lock (s.Gate) { s.Game = new GameController(s.Players); s.Game.StartGame(); s.RecentPlays.Clear(); s.AlertMessage = null; s.Message = "A new round has started."; WatchGameEvents(s, s.Game); RunAiTurns(s); return View(s, includeRecentPlays: true); }
+        lock (s.Gate) { var newMatch = resetScores || s.Game.IsMatchOver; s.RoundNumber = newMatch ? 1 : s.RoundNumber + 1; s.Game = newMatch ? new GameController(s.Players) : new GameController(s.Players, previousScores: s.Game.GetPlayerScores()); s.Game.StartGame(); s.RecentPlays.Clear(); s.RecentEvents.Clear(); s.AlertMessage = null; s.Message = newMatch ? "A new game has started." : "A new round has started."; WatchGameEvents(s, s.Game); s.RecentEvents.Add(new GameEventDto("table", null, null, CardDto.From(s.Game.GetTopCard()!), string.Empty, s.Game.GetPlayerHand(s.Human).Select(CardDto.From).ToArray())); RunAiTurns(s); return View(s, includeRecentPlays: true); }
     }
     private static void RunAiTurns(Session s)
     {
@@ -129,23 +133,35 @@ public sealed class GameService : IGameService
     private static string CardName(Card card) => card.Color == CardColor.Wild ? card.Action == ActionType.WildDrawFour ? "Wild Draw Four" : "Wild" : $"{card.Color} {card.Action?.ToString() ?? card.Value?.ToString()}";
     private static void WatchGameEvents(Session session, GameController game)
     {
-        game.OnPenaltyCardsDrawn += (player, count) => AppendAlert(session, $"{player.Name} drew {count} penalty cards.");
+        game.OnCardDrawn += (player, card) => session.RecentEvents.Add(new GameEventDto("draw", player.Id, player.Name, CardDto.From(card), $"{player.Name} drew a card from the draw pile.", player == session.Human ? game.GetPlayerHand(player).Select(CardDto.From).ToArray() : null));
+        game.OnCardsDrawn += (player, count) => AppendAlert(session, $"{player.Name} drew {count} {(count == 1 ? "card" : "cards")} from the draw pile.", queueEvent: false, hand: player == session.Human ? game.GetPlayerHand(player).Select(CardDto.From).ToArray() : null);
+        game.OnPenaltyCardsDrawn += (player, count) => AppendAlert(session, $"{player.Name} drew {count} penalty cards.", queueEvent: false);
         game.OnUnoPenalty += (player, count) => AppendAlert(session, $"{player.Name} forgot to call UNO and drew {count} cards.");
-        game.OnCardPlayed += (player, card) => session.RecentPlays.Add(new PlayerPlayDto(player.Id, player.Name, CardDto.From(card)));
+        game.OnGameEnded += winner => AppendAlert(session, $"{winner.Name} reached {GameController.WinningScore} points and won the game.");
+        game.OnCardPlayed += (player, card) =>
+        {
+            session.RecentPlays.Add(new PlayerPlayDto(player.Id, player.Name, CardDto.From(card)));
+            session.RecentEvents.Add(new GameEventDto("play", player.Id, player.Name, CardDto.From(card), $"{player.Name} played {CardName(card)} to the discard pile.", player == session.Human ? game.GetPlayerHand(player).Select(CardDto.From).ToArray() : null));
+            AppendAlert(session, $"{player.Name} played {CardName(card)} to the discard pile.", queueEvent: false);
+        };
     }
-    private static void AppendAlert(Session session, string message)
+    private static void AppendAlert(Session session, string message, bool queueEvent = true, IReadOnlyList<CardDto>? hand = null)
     {
         session.AlertMessage = session.AlertMessage is null ? message : $"{session.AlertMessage} {message}";
         session.AlertVersion++;
+        if (queueEvent) session.RecentEvents.Add(new GameEventDto("alert", null, null, null, message, hand));
     }
     private static GameViewDto View(Session s, bool includeRecentPlays = false)
     {
         var g = s.Game; var hand = g.GetPlayerHand(s.Human);
         IReadOnlyList<PlayerPlayDto> recentPlays = includeRecentPlays ? s.RecentPlays.ToArray() : Array.Empty<PlayerPlayDto>();
+        IReadOnlyList<GameEventDto> recentEvents = includeRecentPlays ? s.RecentEvents.ToArray() : Array.Empty<GameEventDto>();
         if (includeRecentPlays) s.RecentPlays.Clear();
-        return new GameViewDto(s.Id, g.IsGameOver ? "completed" : "playing", g.Winner?.Name, s.Human.Id,
-            s.Players.Select(p => new PlayerDto(p.Id, p.Name, g.GetPlayerHand(p).Count, p == g.GetCurrentPlayer(), p == s.Human)).ToArray(),
+        if (includeRecentPlays) s.RecentEvents.Clear();
+        var status = g.IsMatchOver ? "completed" : g.IsGameOver ? "round-complete" : "playing";
+        return new GameViewDto(s.Id, status, g.Winner?.Name, s.Human.Id,
+            s.Players.Select(p => new PlayerDto(p.Id, p.Name, g.GetPlayerHand(p).Count, p == g.GetCurrentPlayer(), p == s.Human, g.GetPlayerScore(p))).ToArray(),
             hand.Select(CardDto.From).ToArray(), g.GetTopCard() is { } top ? CardDto.From(top) : null, g.GetActiveColor(), g.Table.DrawPile.TotalCards,
-            g.HasDrawnThisTurn, g.Direction.ToString(), s.Message, s.AlertMessage, s.AlertVersion, recentPlays);
+            g.HasDrawnThisTurn, g.Direction.ToString(), s.Message, s.AlertMessage, s.AlertVersion, recentPlays, recentEvents, s.RoundNumber);
     }
 }

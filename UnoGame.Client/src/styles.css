@@ -90,7 +90,7 @@ button:disabled {
 }
 
 .eyebrow {
-    font: 500 10px 'DM Mono', monospace;
+    font: 500 11px 'DM Mono', monospace;
     letter-spacing: .16em;
     color: var(--lime);
     margin: 0 0 17px
@@ -211,7 +211,7 @@ button:disabled {
 }
 
 .game-header {
-    height: 78px;
+    height: 67px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -223,16 +223,30 @@ button:disabled {
     position: static
 }
 
+.score-display {
+    margin-left: auto;
+    margin-right: 14px;
+    color: var(--muted);
+    font: 17px 'DM Mono', monospace;
+    letter-spacing: .12em
+}
+
+.score-display b {
+    color: var(--lime);
+    font-size: 21px;
+    margin-left: 5px
+}
+
 .round-label {
     color: #b5bbaf;
-    font: 10px 'DM Mono', monospace;
+    font: 15px 'DM Mono', monospace;
     letter-spacing: .12em
 }
 
 .live-dot {
     display: inline-block;
-    width: 7px;
-    height: 7px;
+    width: 9px;
+    height: 9px;
     background: var(--lime);
     border-radius: 50%;
     margin-right: 8px;
@@ -241,7 +255,7 @@ button:disabled {
 
 .round-divider {
     color: #526058;
-    margin: 0 8px
+    margin: 0 2px
 }
 
 .icon-button,
@@ -249,7 +263,7 @@ button:disabled {
     border: 1px solid var(--line);
     background: transparent;
     color: var(--cream);
-    padding: 10px 13px
+    padding: 10px 10px
 }
 
 .icon-button {
@@ -263,14 +277,14 @@ button:disabled {
 
 .table-area {
     width: min(850px, 100%);
-    margin: 36px auto 22px
+    margin: 12px auto 21px
 }
 
 .opponent-row {
     display: flex;
     justify-content: center;
     gap: clamp(16px, 5vw, 68px);
-    margin-bottom: 22px
+    margin-bottom: 17px
 }
 
 .opponent {
@@ -279,7 +293,7 @@ button:disabled {
     align-items: center;
     gap: 10px;
     position: relative;
-    opacity: .72
+    opacity: .81
 }
 
 .opponent.active {
@@ -312,13 +326,13 @@ button:disabled {
 }
 
 .opponent strong {
-    font-size: 12px
+    font-size: 18px
 }
 
 .opponent div:nth-child(2) span {
-    font: 9px 'DM Mono', monospace;
+    font: 18px 'DM Mono', monospace;
     color: var(--muted);
-    margin-top: 4px
+    margin-top: 1px
 }
 
 .turn-badge {
@@ -355,9 +369,9 @@ button:disabled {
     transform: translateX(-50%);
     display: flex;
     gap: 16px;
-    color: #d2decf88;
+    color: #fcfcfcfc;
     white-space: nowrap;
-    font: 8px 'DM Mono', monospace;
+    font: 18px 'DM Mono', monospace;
     letter-spacing: .13em
 }
 
@@ -568,12 +582,12 @@ button:disabled {
     align-items: center;
     gap: 7px;
     color: #e4e7d8;
-    font: 10px 'DM Mono', monospace
+    font: 18px 'DM Mono', monospace
 }
 
 .active-color span {
-    color: #d2decf7c;
-    font-size: 8px;
+    color: #fbfbfbfe;
+    font-size: 18px;
     letter-spacing: .12em;
     margin-right: 4px
 }
@@ -626,9 +640,16 @@ button:disabled {
 }
 
 .hand-area {
-    border-top: 1px solid var(--line);
-    padding-top: 21px;
-    margin-top: auto
+    border: 0;
+    padding-top: 0;
+    margin-top: -112px;
+    position: relative;
+    z-index: 3;
+    pointer-events: none
+}
+
+.hand-area button {
+    pointer-events: auto
 }
 
 .hand-heading {
@@ -642,12 +663,12 @@ button:disabled {
 }
 
 .hand-heading h2 {
-    font: 600 24px 'Playfair Display', serif;
+    font: 600 21px 'Playfair Display', serif;
     margin: 0
 }
 
 .hand-heading h2 span {
-    font: 10px 'DM Mono', monospace;
+    font: 19px 'DM Mono', monospace;
     color: var(--muted);
     margin-left: 11px
 }
@@ -658,11 +679,23 @@ button:disabled {
 }
 
 .subtle-button {
-    font-size: 11px
+    font-size: 17px
+}
+
+.pass-button {
+    background: white;
+    color: #17231c;
+    border-color: white
+}
+
+.uno-button:not(:disabled) {
+    background: white;
+    color: #17231c;
+    border-color: white
 }
 
 .subtle-button:disabled {
-    opacity: .4
+    opacity: .5
 }
 
 .primary-button.compact {
@@ -705,6 +738,47 @@ button:disabled {
     color: #727c71;
     font: 8px 'DM Mono', monospace;
     letter-spacing: .1em
+}
+
+.draw-flight {
+    --flight-x: 0vw;
+    --flight-y: 39vh;
+    position: fixed;
+    left: 50%;
+    top: 48%;
+    z-index: 45;
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    pointer-events: none;
+    animation: draw-card-flight .8s cubic-bezier(.18, .76, .24, 1) both
+}
+
+.draw-flight.from-seat-1 { --flight-x: -29vw; --flight-y: -31vh }
+.draw-flight.from-seat-2 { --flight-x: 0vw; --flight-y: -38vh }
+.draw-flight.from-seat-3 { --flight-x: 29vw; --flight-y: -31vh }
+
+.draw-flight > span {
+    padding: 5px 9px;
+    border: 1px solid #d3ee7477;
+    border-radius: 20px;
+    background: #14251def;
+    color: var(--lime);
+    font: 9px 'DM Mono', monospace;
+    letter-spacing: .07em
+}
+
+.draw-flight .draw-pile-animation {
+    width: 76px;
+    height: 112px;
+    transform: rotate(-7deg)
+}
+
+@keyframes draw-card-flight {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.58) rotate(-8deg) }
+    18% { opacity: 1 }
+    72% { opacity: 1; transform: translate(calc(-50% + var(--flight-x)), calc(-50% + var(--flight-y))) scale(1.06) rotate(0) }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--flight-x)), calc(-50% + var(--flight-y))) scale(.9) rotate(2deg) }
 }
 
 .error-message {
@@ -812,6 +886,25 @@ button:disabled {
     width: 100%
 }
 
+.score-summary {
+    margin: 22px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line)
+}
+
+.score-summary div {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    color: #c5cbbf;
+    font-size: 13px
+}
+
+.score-summary b {
+    color: var(--lime);
+    font: 11px 'DM Mono', monospace
+}
+
 @media(max-width:700px) {
     .game-shell {
         padding: 0 18px
@@ -897,7 +990,7 @@ button:disabled {
     }
 
     .hand-area {
-        padding-top: 16px
+        padding-top: 0
     }
 
     .hand-heading h2 {
@@ -996,4 +1089,5 @@ button:disabled {
 
 .playing-card.symbol-action .card-center{font-size:24px}.hand-cards .playing-card.symbol-action .card-center{font-size:clamp(14.5px,2vw,22px)}.floating-alert{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:50;width:min(540px,calc(100vw - 32px));display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid #f6b94f99;background:linear-gradient(100deg,#68451ddd,#211d13ee);box-shadow:0 12px 42px #0009,0 0 26px #f6b94f2a;color:#ffe2a4;font-size:13px;font-weight:600;animation:alert-arrive .24s ease-out both;pointer-events:none}.floating-alert span{font-size:18px;color:#ffd17c}.play-flight{--flight-x:0vw;--flight-y:0vh;--flight-rotation:0deg;position:fixed;left:50%;top:48%;z-index:45;display:grid;justify-items:center;gap:8px;pointer-events:none;animation:card-flight .8s cubic-bezier(.18,.76,.24,1) both}.play-flight.from-seat-0{--flight-x:-13vw;--flight-y:39vh;--flight-rotation:-12deg}.play-flight.from-seat-1{--flight-x:-29vw;--flight-y:-31vh;--flight-rotation:10deg}.play-flight.from-seat-2{--flight-x:0vw;--flight-y:-38vh;--flight-rotation:-8deg}.play-flight.from-seat-3{--flight-x:29vw;--flight-y:-31vh;--flight-rotation:12deg}.play-flight>span{padding:5px 9px;border:1px solid #d3ee7477;border-radius:20px;background:#14251deF;color:var(--lime);font:9px 'DM Mono',monospace;letter-spacing:.07em}.play-flight .playing-card{width:76px;height:112px}.play-flight .card-center{font-size:36px}.play-flight .playing-card.symbol-action .card-center{font-size:18px}@keyframes card-flight{0%{opacity:0;transform:translate(calc(-50% + var(--flight-x)),calc(-50% + var(--flight-y))) rotate(var(--flight-rotation)) scale(.58)}18%{opacity:1}72%{opacity:1;transform:translate(-50%,-50%) rotate(0) scale(1.06)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}@keyframes alert-arrive{from{opacity:0;translate:0 -12px}to{opacity:1;translate:0 0}}@media(prefers-reduced-motion:reduce){.play-flight,.floating-alert{animation-duration:.15s}}
 
-.table-area{margin-bottom:8px}.hand-area{margin-top:8px!important}.swal2-container.swal2-top{z-index:1000!important;padding-top:14px!important}.swal2-popup.uno-swal-popup{width:min(540px,calc(100vw - 32px));border:1px solid #f6b94f99;background:linear-gradient(100deg,#68451d,#211d13);box-shadow:0 12px 42px #0009,0 0 26px #f6b94f2a}.swal2-title.uno-swal-title{color:#ffe2a4;font:600 14px 'DM Sans',sans-serif}.swal2-timer-progress-bar{background:#ffc65c!important}
+.table-area{margin-bottom:8px}.swal2-container.swal2-top{z-index:1000!important;padding-top:14px!important}.swal2-popup.uno-swal-popup{width:min(540px,calc(100vw - 32px));border:1px solid #f6b94f99;background:linear-gradient(100deg,#68451d,#211d13);box-shadow:0 12px 42px #0009,0 0 26px #f6b94f2a}.swal2-title.uno-swal-title{color:#ffe2a4;font:600 17px 'DM Sans',sans-serif}.swal2-timer-progress-bar{background:#ffc65c!important}
+.swal2-html-container.uno-swal-text{color:#fff!important}

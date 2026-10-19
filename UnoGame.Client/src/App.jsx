@@ -34,6 +34,8 @@ function App() {
   const [wildCard, setWildCard] = useState(null);
   const [animationQueue, setAnimationQueue] = useState([]);
   const [activePlay, setActivePlay] = useState(null);
+  const [displayedTopCard, setDisplayedTopCard] = useState(null);
+  const [displayedHand, setDisplayedHand] = useState([]);
   const isYourTurn = Boolean(game?.players.find(p => p.isCurrentPlayer)?.isHuman && game.status === 'playing');
 
   const act = async (operation) => {
@@ -46,9 +48,31 @@ function App() {
   const createGame = () => act(async () => request('/games', 'POST', { playerName: name.trim() || 'You', opponentCount: opponents }));
   const play = (card, chosenColor = null) => act(async () => request(`/games/${game.gameId}/play`, 'POST', { cardId: card.id, chosenColor }));
   const draw = () => act(async () => request(`/games/${game.gameId}/draw`, 'POST'));
-  const uno = () => act(async () => request(`/games/${game.gameId}/uno`, 'POST'));
+  const pass = () => act(async () => request(`/games/${game.gameId}/pass`, 'POST'));
+  const uno = () => act(async () => {
+    const updated = await request(`/games/${game.gameId}/uno`, 'POST');
+    Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'UNO called!', showConfirmButton: false, timer: 1600, timerProgressBar: true, customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' } });
+    return updated;
+  });
   const catchUno = (playerId) => act(async () => request(`/games/${game.gameId}/catch-uno`, 'POST', { playerId }));
   const restart = () => act(async () => request(`/games/${game.gameId}/restart`, 'POST'));
+  const restartGame = async () => {
+    const result = await Swal.fire({
+      title: 'Restart game?',
+      text: 'Your current round and scores will be reset.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Restart',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      customClass: {
+        popup: 'uno-swal-popup',
+        title: 'uno-swal-title',
+        htmlContainer: 'uno-swal-text',
+      },
+    });
+    if (result.isConfirmed) await act(async () => request(`/games/${game.gameId}/restart?resetScores=true`, 'POST'));
+  };
 
   useEffect(() => {
     if (!game?.gameId || game.status !== 'playing') return undefined;
@@ -60,37 +84,94 @@ function App() {
   }, [game?.gameId, game?.status]);
 
   useEffect(() => {
-    if (!game?.alertMessage || !game.alertVersion) return undefined;
+    if (!game?.recentEvents?.length) return;
+    setAnimationQueue(queue => [...queue, ...game.recentEvents.map((event, index) => ({ ...event, animationId: `${Date.now()}-${index}-${Math.random()}` }))]);
+  }, [game?.recentEvents]);
+
+  useEffect(() => {
+    if (game?.status !== 'playing') Swal.close();
+  }, [game?.status]);
+
+  useEffect(() => {
+    if (game && !game.recentEvents?.length && game.topCard && !displayedTopCard) setDisplayedTopCard(game.topCard);
+    if (game && !game.recentEvents?.length && game.hand && !displayedHand.length) setDisplayedHand(game.hand);
+  }, [game?.gameId, game?.recentEvents?.length, game?.topCard, game?.hand, displayedTopCard, displayedHand.length]);
+
+  useEffect(() => {
+    const currentEvent = animationQueue[0];
+    if (!currentEvent) { setActivePlay(null); return undefined; }
+    if (currentEvent.type === 'table') {
+      setDisplayedTopCard(currentEvent.card);
+      if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+      setAnimationQueue(queue => queue.slice(1));
+      return undefined;
+    }
+    if (currentEvent.type === 'draw') {
+      if (game.status !== 'playing') {
+        if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+        setActivePlay(null);
+        setAnimationQueue(queue => queue.slice(1));
+        return undefined;
+      }
+      setActivePlay(currentEvent);
+      const timer = window.setTimeout(() => {
+        if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+        setAnimationQueue(queue => queue.slice(1));
+      }, 800);
+      return () => window.clearTimeout(timer);
+    }
+    if (currentEvent.type === 'alert') {
+      setActivePlay(null);
+      if (game.status !== 'playing') {
+        if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+        setAnimationQueue(queue => queue.slice(1));
+        return undefined;
+      }
+      let cancelled = false;
+      Swal.fire({
+        toast: true,
+        position: 'top',
+        icon: 'warning',
+        title: currentEvent.message,
+        showConfirmButton: false,
+        timer: 1400,
+        timerProgressBar: true,
+        customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' },
+      }).then(() => {
+        if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+        if (!cancelled) setAnimationQueue(queue => queue.slice(1));
+      });
+      return () => { cancelled = true; Swal.close(); };
+    }
+    setDisplayedTopCard(currentEvent.card);
+    setActivePlay(currentEvent);
+    if (game.status !== 'playing') {
+      if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+      setActivePlay(null);
+      setAnimationQueue(queue => queue.slice(1));
+      return undefined;
+    }
+    let cancelled = false;
     Swal.fire({
       toast: true,
       position: 'top',
       icon: 'warning',
-      title: game.alertMessage,
+      title: currentEvent.message,
       showConfirmButton: false,
-      timer: 4200,
+      timer: 1400,
       timerProgressBar: true,
       customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' },
+    }).then(() => {
+      if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+      if (!cancelled) setAnimationQueue(queue => queue.slice(1));
     });
-    return () => Swal.close();
-  }, [game?.alertMessage, game?.alertVersion]);
-
-  useEffect(() => {
-    if (!game?.recentPlays?.length) return;
-    setAnimationQueue(queue => [...queue, ...game.recentPlays.map((play, index) => ({ ...play, animationId: `${Date.now()}-${index}-${Math.random()}` }))]);
-  }, [game?.recentPlays]);
-
-  useEffect(() => {
-    const currentPlay = animationQueue[0];
-    if (!currentPlay) { setActivePlay(null); return undefined; }
-    setActivePlay(currentPlay);
-    const timer = window.setTimeout(() => setAnimationQueue(queue => queue.slice(1)), 800);
-    return () => window.clearTimeout(timer);
+    return () => { cancelled = true; Swal.close(); };
   }, [animationQueue[0]?.animationId]);
 
   useEffect(() => {
     if (!game?.gameId || !game.hasDrawnThisTurn || !isYourTurn || busy || activePlay || animationQueue.length) return undefined;
     const gameId = game.gameId;
-    const timer = window.setTimeout(() => { setWildCard(null); act(async () => request(`/games/${gameId}/pass`, 'POST')); }, 2000);
+    const timer = window.setTimeout(() => { setWildCard(null); act(async () => request(`/games/${gameId}/pass`, 'POST')); }, 4000);
     return () => window.clearTimeout(timer);
   }, [game?.gameId, game?.hasDrawnThisTurn, isYourTurn, busy, activePlay, animationQueue.length]);
 
@@ -110,27 +191,31 @@ function App() {
   const opponentsList = game.players.filter(p => !p.isHuman);
   const canDraw = isYourTurn;
   const animatedSeat = activePlay && game.players.findIndex(player => player.id === activePlay.playerId);
+  const inPlayLabel = displayedTopCard?.action
+    ? displayedTopCard.action.replace('WildDrawFour', '+4').replace('DrawTwo', '+2')
+    : displayedTopCard?.value;
+  const inPlayColor = displayedTopCard?.color === 'Wild' ? game.activeColor : displayedTopCard?.color || game.activeColor;
   return <main className="game-shell">
-    <header className="game-header"><a className="brand" href="#" onClick={e => { e.preventDefault(); setGame(null); }}><span className="brand-mark">U</span><span>TABLE <b>CLUB</b></span></a><div className="round-label"><span className="live-dot" /> FRIENDLY GAME <span className="round-divider">/</span> ROUND 01</div><button className="icon-button" title="Start a new round" onClick={restart} disabled={busy || Boolean(activePlay) || animationQueue.length > 0}>↻ <span>New round</span></button></header>
+    <header className="game-header"><a className="brand" href="#" onClick={e => { e.preventDefault(); setGame(null); }}><span className="brand-mark">U</span><span>UNO <b>CIHUY</b></span></a><div className="round-label"><span className="live-dot" /> FRIENDLY GAME <span className="round-divider">/</span> ROUND {String(game.roundNumber).padStart(2, '0')}</div><div className="score-display">SCORE <b>{human.score}</b></div><button className="icon-button" title="Restart game" onClick={restartGame} disabled={busy || Boolean(activePlay) || animationQueue.length > 0}>↻ <span>Restart</span></button></header>
     <section className="table-area">
       <div className="opponent-row">{opponentsList.map((player, index) => <div className={`opponent ${player.isCurrentPlayer ? 'active' : ''}`} key={player.id}>
-        <div className={`avatar avatar-${index}`}>{player.name.slice(0, 1).toUpperCase()}</div><div><strong>{player.name}</strong><span>{player.cardCount} {player.cardCount === 1 ? 'card' : 'cards'}</span></div>{player.isCurrentPlayer && <span className="turn-badge">THINKING</span>}{player.cardCount === 1 && <button className="catch-button" disabled={busy || Boolean(activePlay) || animationQueue.length > 0 || game.status !== 'playing'} onClick={() => catchUno(player.id)}>CATCH UNO</button>}
+        <div className={`avatar avatar-${index}`}>{player.name.slice(0, 1).toUpperCase()}</div><div><strong>{player.name}</strong><span>{player.cardCount} {player.cardCount === 1 ? 'card' : 'cards'} · {player.score} pts</span></div>{player.isCurrentPlayer && <span className="turn-badge">THINKING</span>}{player.cardCount === 1 && <button className="catch-button" disabled={busy || Boolean(activePlay) || animationQueue.length > 0 || game.status !== 'playing'} onClick={() => catchUno(player.id)}>CATCH UNO</button>}
       </div>)}</div>
       <div className="felt"><div className="table-stitch" /><div className="table-topline"><span>THE TABLE</span><span className="direction">{game.direction === 'Clockwise' ? '↻' : '↺'} &nbsp;{game.direction}</span></div>
         <div className="pile-row"><div className="pile-wrap"><div className="pile-count">{game.drawPileCount}</div><button className="draw-pile" onClick={draw} disabled={!canDraw || busy || Boolean(activePlay) || animationQueue.length > 0} aria-label="Draw a card"><span>U</span><i>UNO</i></button><span className="pile-caption">DRAW PILE</span></div>
-          <div className="turn-arrow">→</div><div className="discard-wrap">{game.topCard && <CardFace card={game.topCard} />}<span className="pile-caption">DISCARD PILE</span></div></div>
-        <div className="active-color"><span>IN PLAY</span><i className={`color-dot ${colorsClass[game.activeColor]}`} />{game.activeColor}</div>
+          <div className="turn-arrow">→</div><div className="discard-wrap">{displayedTopCard && <CardFace card={displayedTopCard} />}<span className="pile-caption">DISCARD PILE</span></div></div>
+        <div className="active-color"><span>IN PLAY</span><i className={`color-dot ${colorsClass[inPlayColor]}`} />{inPlayColor}{inPlayLabel !== undefined && <b> · {inPlayLabel}</b>}</div>
       </div>
-      <div className="status-line" role="status" aria-live="polite"><div className="status-icon">✳</div><span>{game.message || (isYourTurn ? 'Your turn. Find a match.' : 'The table is playing…')}</span>{isYourTurn && <b>YOUR TURN</b>}</div>
     </section>
-    <section className="hand-area"><div className="hand-heading"><div><p className="eyebrow">YOUR HAND</p><h2>{human.name}<span>{game.hand.length} cards</span></h2></div><div className="hand-actions"><button className="subtle-button" onClick={uno} disabled={!isYourTurn || busy || Boolean(activePlay) || animationQueue.length > 0 || game.hand.length !== 2}>✳ &nbsp;Call UNO</button></div></div>
-      <div className="hand-cards">{game.hand.map(card => <CardFace key={card.id} card={card} disabled={!isYourTurn || busy || Boolean(activePlay) || animationQueue.length > 0} onClick={() => card.color === 'Wild' ? setWildCard(card) : play(card)} />)}</div>
+    <section className="hand-area"><div className="hand-heading"><div><p className="eyebrow">YOUR HAND</p><h2>{human.name}<span>{displayedHand.length} cards</span></h2></div><div className="hand-actions">{isYourTurn && game.hasDrawnThisTurn && <button className="subtle-button pass-button" onClick={pass} disabled={busy || Boolean(activePlay) || animationQueue.length > 0}>Pass</button>}<button className="subtle-button uno-button" onClick={uno} disabled={!isYourTurn || busy || Boolean(activePlay) || animationQueue.length > 0 || displayedHand.length !== 2}>✳ &nbsp;Call UNO</button></div></div>
+      <div className="hand-cards">{displayedHand.map(card => <CardFace key={card.id} card={card} disabled={!isYourTurn || busy || Boolean(activePlay) || animationQueue.length > 0} onClick={() => card.color === 'Wild' ? setWildCard(card) : play(card)} />)}</div>
       {error && <p className="error-message game-error">{error}</p>}
     </section>
-    <footer className="game-footer"><span>PLAY A MATCHING COLOR OR SYMBOL</span><span>DRAWN CARDS PASS AFTER 2 SECONDS</span></footer>
-    {activePlay && <div className={`play-flight from-seat-${animatedSeat}`} key={activePlay.animationId} aria-hidden="true"><span>{activePlay.playerName}</span><CardFace card={activePlay.card} disabled /></div>}
+    {/* <footer className="game-footer"><span>PLAY A MATCHING COLOR OR SYMBOL</span><span>DRAWN CARDS PASS AFTER 5 SECONDS</span></footer> */}
+    {activePlay?.type === 'draw' && <div className={`draw-flight from-seat-${animatedSeat}`} key={activePlay.animationId} aria-hidden="true"><span>{activePlay.playerName}</span><div className="draw-pile draw-pile-animation"><span>U</span><i>UNO</i></div></div>}
+    {activePlay?.type === 'play' && <div className={`play-flight from-seat-${animatedSeat}`} key={activePlay.animationId} aria-hidden="true"><span>{activePlay.playerName}</span><CardFace card={activePlay.card} disabled /></div>}
     {wildCard && <div className="modal-backdrop" role="presentation" onClick={() => setWildCard(null)}><section className="color-modal" role="dialog" aria-modal="true" aria-labelledby="color-title" onClick={e => e.stopPropagation()}><button className="close-modal" onClick={() => setWildCard(null)}>×</button><p className="eyebrow">A WILD MOVE</p><h2 id="color-title">Choose a color</h2><p>Set the color that continues the round.</p><div className="color-options">{colors.map(color => <button key={color} className={`color-choice ${colorsClass[color]}`} onClick={() => { const selected = wildCard; setWildCard(null); play(selected, color); }}><span />{color}</button>)}</div></section></div>}
-    {game.status === 'completed' && <div className="modal-backdrop"><section className="color-modal result-modal"><div className="result-star">✳</div><p className="eyebrow">ROUND COMPLETE</p><h2>{game.winner === human.name ? 'You did it!' : `${game.winner} wins!`}</h2><p>{game.winner === human.name ? 'A very well played round.' : 'There is always another round.'}</p><button className="primary-button" onClick={restart}>Play again <span>↻</span></button></section></div>}
+    {(game.status === 'round-complete' || game.status === 'completed') && <div className="modal-backdrop"><section className="color-modal result-modal"><div className="result-star">✳</div><p className="eyebrow">{game.status === 'completed' ? 'GAME COMPLETE' : 'ROUND COMPLETE'}</p><h2>{game.status === 'completed' ? 'Game over' : `${game.winner} wins the round!`}</h2><div className="score-summary">{game.players.map(player => <div key={player.id}><span>{player.name}</span><b>{player.score} pts</b></div>)}</div>{game.status === 'round-complete' && <button className="primary-button" onClick={restart}>Next round <span>↻</span></button>}{game.status === 'completed' && <button className="primary-button" onClick={restart}>Play again <span>↻</span></button>}</section></div>}
   </main>;
 }
 

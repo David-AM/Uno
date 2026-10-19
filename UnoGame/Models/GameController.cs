@@ -19,6 +19,7 @@ public sealed class GameController
     public event Action<Player, Card>? OnCardPlayed;
     public event Action<CardColor>? OnColorChanged;
     public event Action<Player, int>? OnCardsDrawn;
+    public event Action<Player, Card>? OnCardDrawn;
     public event Action<Player, int>? OnPenaltyCardsDrawn;
     public event Action<Player, int>? OnUnoPenalty;
     public event Action<Player, int>? OnRoundEnded;
@@ -28,17 +29,18 @@ public sealed class GameController
     public Table Table => _table;
     public Player? Winner { get; private set; }
     public bool IsGameOver => Winner is not null;
+    public bool IsMatchOver => _players.Any(player => _playerScores[player] >= WinningScore);
     public int CurrentPlayerIndex => _currentPlayerIndex;
     public TurnDirection Direction => _direction;
     public bool HasDrawnThisTurn => _hasDrawnThisTurn;
     public int PendingDrawCount => _nextDrawPenalty;
 
-    public GameController(List<Player> players, Random? random = null)
+    public GameController(List<Player> players, Random? random = null, IReadOnlyDictionary<Player, int>? previousScores = null)
     {
         if (players.Count < 2 || players.Count > 10) throw new ArgumentException("A game needs 2 to 10 players.");
         _players = players;
         _cardInHands = players.ToDictionary(p => p, _ => new List<Card>());
-        _playerScores = players.ToDictionary(p => p, _ => 0);
+        _playerScores = players.ToDictionary(p => p, p => previousScores is not null && previousScores.TryGetValue(p, out var score) ? score : 0);
         _hasSaidUno = players.ToDictionary(p => p, _ => false);
         _random = random ?? Random.Shared;
         _table = new Table(new Deck(), new DiscardPile());
@@ -108,14 +110,14 @@ public sealed class GameController
         var card = DrawCardFromDeckOnly(player);
         _hasSaidUno[player] = false;
         _hasDrawnThisTurn = true;
-        if (card is not null) OnCardsDrawn?.Invoke(player, 1);
+        if (card is not null) { OnCardDrawn?.Invoke(player, card); OnCardsDrawn?.Invoke(player, 1); }
         return card;
     }
     public void PassTurn(Player player) { if (!ReferenceEquals(GetCurrentPlayer(), player)) throw new InvalidOperationException("It is not this player's turn."); if (!_hasDrawnThisTurn) throw new InvalidOperationException("Draw a card before passing."); _hasSaidUno[player] = false; NextTurn(); }
     public void SayUno(Player player) { if (ReferenceEquals(GetCurrentPlayer(), player) && GetPlayerHand(player).Count == 2) _hasSaidUno[player] = true; }
     public void CatchPlayer(Player caller, Player target)
     {
-        if (GetPlayerHand(target).Count == 1 && !_hasSaidUno[target]) { for (var i = 0; i < 2; i++) DrawCardFromDeckOnly(target); OnCardsDrawn?.Invoke(target, 2); }
+        if (GetPlayerHand(target).Count == 1 && !_hasSaidUno[target]) { for (var i = 0; i < 2; i++) if (DrawCardFromDeckOnly(target) is { } card) OnCardDrawn?.Invoke(target, card); OnCardsDrawn?.Invoke(target, 2); }
     }
     public Player? CheckGameWinner()
     {
@@ -133,7 +135,7 @@ public sealed class GameController
             var target = GetCurrentPlayer();
             var count = _nextDrawPenalty;
             _nextDrawPenalty = 0;
-            for (var i = 0; i < count; i++) DrawCardFromDeckOnly(target);
+            for (var i = 0; i < count; i++) if (DrawCardFromDeckOnly(target) is { } card) OnCardDrawn?.Invoke(target, card);
             OnCardsDrawn?.Invoke(target, count);
             OnPenaltyCardsDrawn?.Invoke(target, count);
             _currentPlayerIndex = (_currentPlayerIndex + (int)_direction + _players.Count) % _players.Count;
@@ -150,7 +152,7 @@ public sealed class GameController
     }
     public void ReverseTurnDirection() => _direction = _direction == TurnDirection.Clockwise ? TurnDirection.CounterClockwise : TurnDirection.Clockwise;
     public void SkipNextTurn() => _skipNext = true;
-    public void ForceDrawCards(Player target, int count) { for (var i = 0; i < count; i++) DrawCardFromDeckOnly(target); OnCardsDrawn?.Invoke(target, count); }
+    public void ForceDrawCards(Player target, int count) { for (var i = 0; i < count; i++) if (DrawCardFromDeckOnly(target) is { } card) OnCardDrawn?.Invoke(target, card); OnCardsDrawn?.Invoke(target, count); }
     public bool RemoveCardFromHand(Player player, Card card) => _cardInHands.TryGetValue(player, out var hand) && hand.Remove(card);
     public bool HasCardInHand(Player player, Card card) => _cardInHands.TryGetValue(player, out var hand) && hand.Any(c => c.Id == card.Id);
     public List<Card> GetPlayerHand(Player player) => _cardInHands.TryGetValue(player, out var hand) ? hand : [];
@@ -162,5 +164,6 @@ public sealed class GameController
     public Card? GetTopCard() => _table.DiscardPile.Cards.LastOrDefault();
     public int CalculateRoundScore(Player winner) => _players.Where(p => p != winner).Sum(p => _cardInHands[p].Sum(c => c.ScoreValue));
     public int GetPlayerScore(Player player) => _playerScores[player];
+    public IReadOnlyDictionary<Player, int> GetPlayerScores() => _playerScores;
     private void ApplyOpeningCard(Card card) { if (card.Action == ActionType.Reverse) ReverseTurnDirection(); else if (card.Action == ActionType.Skip) NextTurn(); else if (card.Action == ActionType.DrawTwo) { ForceDrawCards(GetCurrentPlayer(), 2); NextTurn(); } }
 }
