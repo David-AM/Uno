@@ -92,12 +92,19 @@ public sealed class GameController
         if (_cardInHands[player].Count == 1)
         {
             if (_hasSaidUno[player]) OnPlayerCardRemainOne?.Invoke(player);
-            else { ForceDrawCards(player, 4); OnUnoPenalty?.Invoke(player, 4); }
+            // A player who reaches one card without calling UNO is vulnerable
+            // to a catch, but the penalty is not applied automatically.
+            else OnPlayerCardRemainOne?.Invoke(player);
         }
         if (CheckGameWinner() is not null) return true;
         switch (card.Action)
         {
-            case ActionType.Reverse: ReverseTurnDirection(); break;
+            case ActionType.Reverse:
+                ReverseTurnDirection();
+                // In a two-player game, Reverse has the same effect as Skip:
+                // the other player is skipped and the current player plays again.
+                if (_players.Count == 2) _skipNext = true;
+                break;
             case ActionType.Skip: _skipNext = true; break;
             case ActionType.DrawTwo: _nextDrawPenalty += 2; break;
             case ActionType.WildDrawFour: _nextDrawPenalty += 4; break;
@@ -117,7 +124,11 @@ public sealed class GameController
     public void SayUno(Player player) { if (ReferenceEquals(GetCurrentPlayer(), player) && GetPlayerHand(player).Count == 2) _hasSaidUno[player] = true; }
     public void CatchPlayer(Player caller, Player target)
     {
-        if (GetPlayerHand(target).Count == 1 && !_hasSaidUno[target]) { for (var i = 0; i < 2; i++) if (DrawCardFromDeckOnly(target) is { } card) OnCardDrawn?.Invoke(target, card); OnCardsDrawn?.Invoke(target, 2); }
+        if (GetPlayerHand(target).Count == 1 && !_hasSaidUno[target])
+        {
+            ForceDrawCards(target, 4);
+            OnUnoPenalty?.Invoke(target, 4);
+        }
     }
     public Player? CheckGameWinner()
     {

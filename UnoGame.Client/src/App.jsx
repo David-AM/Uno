@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5124/api';
+const API = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:5124/api`;
+const HUB = `${API.replace(/\/api\/?$/, '')}/hubs/multiplayer`;
 const colors = ['Red', 'Blue', 'Green', 'Yellow'];
 const colorsClass = { Red: 'red', Blue: 'blue', Green: 'green', Yellow: 'yellow', Wild: 'wild' };
 
@@ -27,6 +29,11 @@ function CardFace({ card, small = false, onClick, disabled }) {
 
 function App() {
   const [game, setGame] = useState(null);
+  const [lobby, setLobby] = useState(null);
+  const [playerId, setPlayerId] = useState(null);
+  const [connection, setConnection] = useState(null);
+  const [mode, setMode] = useState(null);
+  const [friendsRole, setFriendsRole] = useState(null);
   const [name, setName] = useState('');
   const [opponents, setOpponents] = useState(3);
   const [busy, setBusy] = useState(false);
@@ -41,21 +48,47 @@ function App() {
   const act = async (operation) => {
     if (busy || activePlay || animationQueue.length) return;
     setBusy(true); setError('');
-    try { setGame(await operation()); }
+    try { const result = await operation(); if (result) setGame(result); }
     catch (e) { setError(e.message); }
     finally { setBusy(false); }
   };
-  const createGame = () => act(async () => request('/games', 'POST', { playerName: name.trim() || 'You', opponentCount: opponents }));
-  const play = (card, chosenColor = null) => act(async () => request(`/games/${game.gameId}/play`, 'POST', { cardId: card.id, chosenColor }));
-  const draw = () => act(async () => request(`/games/${game.gameId}/draw`, 'POST'));
-  const pass = () => act(async () => request(`/games/${game.gameId}/pass`, 'POST'));
-  const uno = () => act(async () => {
-    const updated = await request(`/games/${game.gameId}/uno`, 'POST');
-    Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'UNO called!', showConfirmButton: false, timer: 1600, timerProgressBar: true, customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' } });
-    return updated;
+  const createGame = () => act(async () => {
+    if (mode === 'bot') {
+      return request('/games', 'POST', { playerName: name.trim() || 'You', opponentCount: opponents });
+    }
+    const joined = await request('/lobby/join', 'POST', {
+      playerName: name.trim() || 'You',
+      opponentCount: opponents,
+      hostLobby: friendsRole === 'host',
+    });
+    setPlayerId(joined.playerId); setLobby(joined.lobby);
+    const hub = new HubConnectionBuilder().withUrl(HUB).withAutomaticReconnect().configureLogging(LogLevel.Warning).build();
+    hub.on('lobbyUpdated', setLobby);
+    hub.on('gameUpdated', state => { if (state) setGame(state); });
+    hub.on('actionError', setError);
+    await hub.start(); await hub.invoke('Register', joined.playerId); setConnection(hub);
+    return joined.game;
   });
-  const catchUno = (playerId) => act(async () => request(`/games/${game.gameId}/catch-uno`, 'POST', { playerId }));
-  const restart = () => act(async () => request(`/games/${game.gameId}/restart`, 'POST'));
+  const multiplayerAction = (method, ...args) => act(async () => { if (!connection) throw new Error('Connecting to the lobby…'); await connection.invoke(method, playerId, ...args); });
+  const botAction = (path, method = 'POST', body) => act(() => request(`/games/${game.gameId}${path}`, method, body));
+  const play = (card, chosenColor = null) => mode === 'bot'
+    ? botAction('/play', 'POST', { cardId: card.id, chosenColor })
+    : multiplayerAction('Play', card.id, chosenColor);
+  const draw = () => mode === 'bot' ? botAction('/draw') : multiplayerAction('Draw');
+  const pass = () => mode === 'bot' ? botAction('/pass') : multiplayerAction('Pass');
+  const uno = () => act(async () => {
+    if (mode === 'bot') await request(`/games/${game.gameId}/uno`, 'POST');
+    else await connection.invoke('SayUno', playerId);
+    Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'UNO called!', showConfirmButton: false, timer: 1600, timerProgressBar: true, customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' } });
+    return null;
+  });
+  const catchUno = targetPlayerId => mode === 'bot'
+    ? botAction('/catch-uno', 'POST', { playerId: targetPlayerId })
+    : multiplayerAction('CatchUno', targetPlayerId);
+  const startGame = () => multiplayerAction('Start');
+  const restart = (resetScores = false) => mode === 'bot'
+    ? botAction(`/restart?resetScores=${resetScores}`)
+    : multiplayerAction('Restart', resetScores);
   const restartGame = async () => {
     const result = await Swal.fire({
       title: 'Restart game?',
@@ -71,17 +104,10 @@ function App() {
         htmlContainer: 'uno-swal-text',
       },
     });
-    if (result.isConfirmed) await act(async () => request(`/games/${game.gameId}/restart?resetScores=true`, 'POST'));
+    if (result.isConfirmed) await restart(true);
   };
 
-  useEffect(() => {
-    if (!game?.gameId || game.status !== 'playing') return undefined;
-    const timer = window.setInterval(async () => {
-      try { const updated = await request(`/games/${game.gameId}`); setGame(updated); }
-      catch { /* Keep the last rendered game if a refresh briefly fails. */ }
-    }, 5000);
-    return () => window.clearInterval(timer);
-  }, [game?.gameId, game?.status]);
+  useEffect(() => () => { connection?.stop(); }, [connection]);
 
   useEffect(() => {
     if (!game?.recentEvents?.length) return;
@@ -93,9 +119,12 @@ function App() {
   }, [game?.status]);
 
   useEffect(() => {
-    if (game && !game.recentEvents?.length && game.topCard && !displayedTopCard) setDisplayedTopCard(game.topCard);
-    if (game && !game.recentEvents?.length && game.hand && !displayedHand.length) setDisplayedHand(game.hand);
-  }, [game?.gameId, game?.recentEvents?.length, game?.topCard, game?.hand, displayedTopCard, displayedHand.length]);
+    // Multiplayer updates do not include animation events, so synchronize the
+    // rendered cards directly whenever the server sends a new game snapshot.
+    if (!game || game.recentEvents?.length) return;
+    if (game.topCard) setDisplayedTopCard(game.topCard);
+    if (game.hand) setDisplayedHand(game.hand);
+  }, [game?.gameId, game?.recentEvents?.length, game?.topCard, game?.hand]);
 
   useEffect(() => {
     const currentEvent = animationQueue[0];
@@ -115,7 +144,7 @@ function App() {
       }
       setActivePlay(currentEvent);
       const timer = window.setTimeout(() => {
-        if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+        setDisplayedHand(game.hand || []);
         setAnimationQueue(queue => queue.slice(1));
       }, 800);
       return () => window.clearTimeout(timer);
@@ -138,16 +167,16 @@ function App() {
         timerProgressBar: true,
         customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' },
       }).then(() => {
-        if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+        setDisplayedHand(game.hand || []);
         if (!cancelled) setAnimationQueue(queue => queue.slice(1));
       });
       return () => { cancelled = true; Swal.close(); };
     }
     setDisplayedTopCard(currentEvent.card);
     setActivePlay(currentEvent);
-    if (game.status !== 'playing') {
-      if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
-      setActivePlay(null);
+      if (game.status !== 'playing') {
+        setDisplayedHand(game.hand || []);
+        setActivePlay(null);
       setAnimationQueue(queue => queue.slice(1));
       return undefined;
     }
@@ -162,7 +191,7 @@ function App() {
       timerProgressBar: true,
       customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' },
     }).then(() => {
-      if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
+      setDisplayedHand(game.hand || []);
       if (!cancelled) setAnimationQueue(queue => queue.slice(1));
     });
     return () => { cancelled = true; Swal.close(); };
@@ -170,27 +199,33 @@ function App() {
 
   useEffect(() => {
     if (!game?.gameId || !game.hasDrawnThisTurn || !isYourTurn || busy || activePlay || animationQueue.length) return undefined;
-    const gameId = game.gameId;
-    const timer = window.setTimeout(() => { setWildCard(null); act(async () => request(`/games/${gameId}/pass`, 'POST')); }, 4000);
+    const timer = window.setTimeout(() => { setWildCard(null); pass(); }, 4000);
     return () => window.clearTimeout(timer);
   }, [game?.gameId, game?.hasDrawnThisTurn, isYourTurn, busy, activePlay, animationQueue.length]);
 
   if (!game) return <main className="landing">
     <div className="landing-decoration decoration-one" /><div className="landing-decoration decoration-two" />
-    <header className="brand"><span className="brand-mark">U</span><span>TABLE <b>CLUB</b></span></header>
-    <section className="welcome-card"><p className="eyebrow">A LITTLE FRIENDLY COMPETITION</p><h1>One more<br /><em>round?</em></h1><p className="intro">Gather your colors, watch the table, and be the first to play your last card.</p>
-      <form onSubmit={e => { e.preventDefault(); createGame(); }}>
-        <label htmlFor="player-name">YOUR NAME</label><input id="player-name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" maxLength="24" />
-        <label htmlFor="opponents">OPPONENTS</label><select id="opponents" value={opponents} onChange={e => setOpponents(Number(e.target.value))}><option value="1">1 opponent</option><option value="2">2 opponents</option><option value="3">3 opponents</option></select>
-        {error && <p className="error-message">{error}</p>}<button className="primary-button" disabled={busy}>{busy ? 'Setting the table…' : 'Start a game'} <span>↗</span></button>
-      </form><p className="landing-note">Classic rules · You vs. the table</p>
-    </section><footer>TAKE YOUR TIME. PICK YOUR MOMENT.</footer>
+    <header className="brand clickable-brand" role="button" tabIndex="0" onClick={() => window.location.reload()} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') window.location.reload(); }}><span className="brand-mark">U</span><span>UNO <b>CIHUY</b></span></header>
+    <section className="welcome-card"><p className="eyebrow">Yang HOKI Yang Menang</p><h1>BERANI<br /><em>COBA?</em></h1><p className="intro">Lihat kartu lu, atur strategi. Bantai atau dibantai</p>
+      <form onSubmit={e => { e.preventDefault(); if (mode === 'bot' || (mode === 'friends' && friendsRole)) createGame(); }}>
+        {!mode && <div className="mode-options"><p className="eyebrow">CHOOSE YOUR GAME</p><button type="button" className="primary-button" onClick={() => setMode('bot')}>Play vs bot <span>→</span></button><button type="button" className="subtle-button" onClick={() => setMode('friends')}>Play with friends</button></div>}
+        {lobby && <div className="lobby-panel"><p className="eyebrow">DEMO LOBBY · {lobby.players.length}/{lobby.maxPlayers}</p>{lobby.players.map(player => <p key={player.id}>{player.name}{player.id === lobby.hostPlayerId ? ' · HOST' : ''}</p>)}<small>{lobby.players.length < lobby.minPlayers ? 'Waiting for at least 2 players…' : 'Ready to start'}</small>{lobby.hostPlayerId === playerId && <button type="button" className="primary-button" disabled={busy || lobby.players.length < lobby.minPlayers} onClick={startGame}>Start multiplayer game <span>↗</span></button>}</div>}
+        {mode === 'friends' && !lobby && !friendsRole && <div className="mode-options"><p className="eyebrow">FRIENDS GAME</p><button type="button" className="primary-button" onClick={() => setFriendsRole('host')}>Host a lobby</button><button type="button" className="subtle-button" onClick={() => setFriendsRole('join')}>Join a lobby</button></div>}
+        {mode && !lobby && (mode === 'bot' || friendsRole) && <><label htmlFor="player-name">YOUR NAME</label><input id="player-name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" maxLength="24" /></>}
+        {mode && !lobby && (mode === 'bot' || friendsRole) && <>{(mode === 'bot' || friendsRole === 'host') && <><label htmlFor="opponents">OPPONENTS</label><select id="opponents" value={opponents} onChange={e => setOpponents(Number(e.target.value))}><option value="1">1 opponent</option><option value="2">2 opponents</option><option value="3">3 opponents</option></select></>}
+        {error && <p className="error-message">{error}</p>}<button className="primary-button" disabled={busy}>{busy ? (mode === 'bot' ? 'Starting game...' : friendsRole === 'host' ? 'Hosting lobby...' : 'Joining lobby...') : (mode === 'bot' ? 'Play vs bot' : friendsRole === 'host' ? 'Host lobby' : 'Join lobby')} <span>↗</span></button><button type="button" className="subtle-button" onClick={() => { setMode(null); setFriendsRole(null); }}>Choose another mode</button></>}
+      </form>
+    </section>
   </main>;
 
   const human = game.players.find(p => p.isHuman);
   const opponentsList = game.players.filter(p => !p.isHuman);
   const canDraw = isYourTurn;
-  const animatedSeat = activePlay && game.players.findIndex(player => player.id === activePlay.playerId);
+  // Seat 0 is always the local player. Other seats are positioned relative to
+  // the viewer, so do not use the shared player-list index here.
+  const animatedSeat = activePlay && activePlay.playerId === game.humanPlayerId
+    ? 0
+    : activePlay && opponentsList.findIndex(player => player.id === activePlay.playerId) + 1;
   const inPlayLabel = displayedTopCard?.action
     ? displayedTopCard.action.replace('WildDrawFour', '+4').replace('DrawTwo', '+2')
     : displayedTopCard?.value;
@@ -211,11 +246,10 @@ function App() {
       <div className="hand-cards">{displayedHand.map(card => <CardFace key={card.id} card={card} disabled={!isYourTurn || busy || Boolean(activePlay) || animationQueue.length > 0} onClick={() => card.color === 'Wild' ? setWildCard(card) : play(card)} />)}</div>
       {error && <p className="error-message game-error">{error}</p>}
     </section>
-    {/* <footer className="game-footer"><span>PLAY A MATCHING COLOR OR SYMBOL</span><span>DRAWN CARDS PASS AFTER 5 SECONDS</span></footer> */}
     {activePlay?.type === 'draw' && <div className={`draw-flight from-seat-${animatedSeat}`} key={activePlay.animationId} aria-hidden="true"><span>{activePlay.playerName}</span><div className="draw-pile draw-pile-animation"><span>U</span><i>UNO</i></div></div>}
     {activePlay?.type === 'play' && <div className={`play-flight from-seat-${animatedSeat}`} key={activePlay.animationId} aria-hidden="true"><span>{activePlay.playerName}</span><CardFace card={activePlay.card} disabled /></div>}
     {wildCard && <div className="modal-backdrop" role="presentation" onClick={() => setWildCard(null)}><section className="color-modal" role="dialog" aria-modal="true" aria-labelledby="color-title" onClick={e => e.stopPropagation()}><button className="close-modal" onClick={() => setWildCard(null)}>×</button><p className="eyebrow">A WILD MOVE</p><h2 id="color-title">Choose a color</h2><p>Set the color that continues the round.</p><div className="color-options">{colors.map(color => <button key={color} className={`color-choice ${colorsClass[color]}`} onClick={() => { const selected = wildCard; setWildCard(null); play(selected, color); }}><span />{color}</button>)}</div></section></div>}
-    {(game.status === 'round-complete' || game.status === 'completed') && <div className="modal-backdrop"><section className="color-modal result-modal"><div className="result-star">✳</div><p className="eyebrow">{game.status === 'completed' ? 'GAME COMPLETE' : 'ROUND COMPLETE'}</p><h2>{game.status === 'completed' ? 'Game over' : `${game.winner} wins the round!`}</h2><div className="score-summary">{game.players.map(player => <div key={player.id}><span>{player.name}</span><b>{player.score} pts</b></div>)}</div>{game.status === 'round-complete' && <button className="primary-button" onClick={restart}>Next round <span>↻</span></button>}{game.status === 'completed' && <button className="primary-button" onClick={restart}>Play again <span>↻</span></button>}</section></div>}
+    {(game.status === 'round-complete' || game.status === 'completed') && <div className="modal-backdrop"><section className="color-modal result-modal"><div className="result-star">✳</div><p className="eyebrow">{game.status === 'completed' ? 'GAME COMPLETE' : 'ROUND COMPLETE'}</p><h2>{game.status === 'completed' ? 'Game over' : `${game.winner} wins the round!`}</h2><div className="score-summary">{game.players.map(player => <div key={player.id}><span>{player.name}</span><b>{player.score} pts</b></div>)}</div>{game.status === 'round-complete' && <button className="primary-button" onClick={() => restart(false)}>Next round <span>↻</span></button>}{game.status === 'completed' && <button className="primary-button" onClick={() => restart(true)}>Play again <span>↻</span></button>}</section></div>}
   </main>;
 }
 

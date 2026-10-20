@@ -103,7 +103,7 @@ public sealed class GameService : IGameService
             var target = s.Players.FirstOrDefault(p => p.Id == targetPlayerId);
             if (target is null || target == s.Human || s.Game.GetPlayerHand(target).Count != 1) error = "That player cannot be caught out right now.";
             else { var before = s.Game.GetPlayerHand(target).Count; s.Game.CatchPlayer(s.Human, target); s.Message = s.Game.GetPlayerHand(target).Count > before ? $"You caught {target.Name} without calling UNO." : $"{target.Name} already called UNO."; }
-            return View(s);
+            return View(s, includeRecentPlays: true);
         }
     }
     public GameViewDto? Restart(string id, bool resetScores = false)

@@ -18,3 +18,23 @@ Accept: application/json
 
 POST {{UnoGame_HostAddress}}/api/games/{{GameId}}/draw
 Accept: application/json
+
+### Multiplayer demonstration lobby
+GET {{UnoGame_HostAddress}}/api/lobby
+Accept: application/json
+
+### Join as the first player (the response contains PlayerId)
+POST {{UnoGame_HostAddress}}/api/lobby/join
+Content-Type: application/json
+
+{
+  "playerName": "Ada"
+}
+
+### Start after a second browser has joined
+POST {{UnoGame_HostAddress}}/api/lobby/start
+Content-Type: application/json
+
+{
+  "playerId": 1
+}
