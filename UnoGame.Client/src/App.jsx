@@ -43,6 +43,7 @@ function App() {
   const [activePlay, setActivePlay] = useState(null);
   const [displayedTopCard, setDisplayedTopCard] = useState(null);
   const [displayedHand, setDisplayedHand] = useState([]);
+  const hasName = name.trim().length > 0;
   const isYourTurn = Boolean(game?.players.find(p => p.isCurrentPlayer)?.isHuman && game.status === 'playing');
 
   const act = async (operation) => {
@@ -53,6 +54,7 @@ function App() {
     finally { setBusy(false); }
   };
   const createGame = () => act(async () => {
+    if (!name.trim()) throw new Error('Enter your name before starting or hosting a game.');
     if (mode === 'bot') {
       return request('/games', 'POST', { playerName: name.trim() || 'You', opponentCount: opponents });
     }
@@ -79,7 +81,7 @@ function App() {
   const uno = () => act(async () => {
     if (mode === 'bot') await request(`/games/${game.gameId}/uno`, 'POST');
     else await connection.invoke('SayUno', playerId);
-    Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'UNO called!', showConfirmButton: false, timer: 1600, timerProgressBar: true, customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' } });
+    if (mode === 'bot') Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'UNO called!', showConfirmButton: false, timer: 1600, timerProgressBar: true, customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' } });
     return null;
   });
   const catchUno = targetPlayerId => mode === 'bot'
@@ -207,7 +209,7 @@ function App() {
     <div className="landing-decoration decoration-one" /><div className="landing-decoration decoration-two" />
     <header className="brand clickable-brand" role="button" tabIndex="0" onClick={() => window.location.reload()} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') window.location.reload(); }}><span className="brand-mark">U</span><span>UNO <b>CIHUY</b></span></header>
     <section className="welcome-card"><p className="eyebrow">Yang HOKI Yang Menang</p><h1>BERANI<br /><em>COBA?</em></h1><p className="intro">Lihat kartu lu, atur strategi. Bantai atau dibantai</p>
-      <form onSubmit={e => { e.preventDefault(); if (mode === 'bot' || (mode === 'friends' && friendsRole)) createGame(); }}>
+      <form onSubmit={e => { e.preventDefault(); if (mode === 'bot' || (mode === 'friends' && friendsRole)) { if (hasName) createGame(); else setError('Enter your name before starting or hosting a game.'); } }}>
         {!mode && <div className="mode-options"><p className="eyebrow">CHOOSE YOUR GAME</p><button type="button" className="primary-button" onClick={() => setMode('bot')}>Play vs bot <span>→</span></button><button type="button" className="subtle-button" onClick={() => setMode('friends')}>Play with friends</button></div>}
         {lobby && <div className="lobby-panel"><p className="eyebrow">DEMO LOBBY · {lobby.players.length}/{lobby.maxPlayers}</p>{lobby.players.map(player => <p key={player.id}>{player.name}{player.id === lobby.hostPlayerId ? ' · HOST' : ''}</p>)}<small>{lobby.players.length < lobby.minPlayers ? 'Waiting for at least 2 players…' : 'Ready to start'}</small>{lobby.hostPlayerId === playerId && <button type="button" className="primary-button" disabled={busy || lobby.players.length < lobby.minPlayers} onClick={startGame}>Start multiplayer game <span>↗</span></button>}</div>}
         {mode === 'friends' && !lobby && !friendsRole && <div className="mode-options"><p className="eyebrow">FRIENDS GAME</p><button type="button" className="primary-button" onClick={() => setFriendsRole('host')}>Host a lobby</button><button type="button" className="subtle-button" onClick={() => setFriendsRole('join')}>Join a lobby</button></div>}
@@ -219,8 +221,16 @@ function App() {
   </main>;
 
   const human = game.players.find(p => p.isHuman);
-  const opponentsList = game.players.filter(p => !p.isHuman);
+  const humanIndex = game.players.findIndex(player => player.isHuman);
+  const opponentsList = humanIndex >= 0
+    ? [...game.players.slice(humanIndex + 1), ...game.players.slice(0, humanIndex)]
+    : [];
   const canDraw = isYourTurn;
+  const directionStep = game.direction === 'Clockwise' ? 1 : -1;
+  const currentPlayerIndex = game.players.findIndex(player => player.isCurrentPlayer);
+  const nextPlayer = currentPlayerIndex >= 0
+    ? game.players[(currentPlayerIndex + directionStep + game.players.length) % game.players.length]
+    : null;
   // Seat 0 is always the local player. Other seats are positioned relative to
   // the viewer, so do not use the shared player-list index here.
   const animatedSeat = activePlay && activePlay.playerId === game.humanPlayerId
@@ -234,8 +244,9 @@ function App() {
     <header className="game-header"><a className="brand" href="#" onClick={e => { e.preventDefault(); setGame(null); }}><span className="brand-mark">U</span><span>UNO <b>CIHUY</b></span></a><div className="round-label"><span className="live-dot" /> FRIENDLY GAME <span className="round-divider">/</span> ROUND {String(game.roundNumber).padStart(2, '0')}</div><div className="score-display">SCORE <b>{human.score}</b></div><button className="icon-button" title="Restart game" onClick={restartGame} disabled={busy || Boolean(activePlay) || animationQueue.length > 0}>↻ <span>Restart</span></button></header>
     <section className="table-area">
       <div className="opponent-row">{opponentsList.map((player, index) => <div className={`opponent ${player.isCurrentPlayer ? 'active' : ''}`} key={player.id}>
-        <div className={`avatar avatar-${index}`}>{player.name.slice(0, 1).toUpperCase()}</div><div><strong>{player.name}</strong><span>{player.cardCount} {player.cardCount === 1 ? 'card' : 'cards'} · {player.score} pts</span></div>{player.isCurrentPlayer && <span className="turn-badge">THINKING</span>}{player.cardCount === 1 && <button className="catch-button" disabled={busy || Boolean(activePlay) || animationQueue.length > 0 || game.status !== 'playing'} onClick={() => catchUno(player.id)}>CATCH UNO</button>}
+        <div className={`avatar avatar-${index}`}>{player.name.slice(0, 1).toUpperCase()}</div><div><strong>{player.name}</strong><span>{player.cardCount} {player.cardCount === 1 ? 'card' : 'cards'} · {player.score} pts</span></div>{player.isCurrentPlayer && <span className="turn-badge">THINKING</span>}{player.cardCount === 1 && <button className="catch-button" disabled={busy || Boolean(activePlay) || animationQueue.length > 0 || game.status !== 'playing'} onClick={() => catchUno(player.id)} aria-label={`Catch ${player.name} for not calling UNO`}>CATCH UNO · {player.name}</button>}
       </div>)}</div>
+      <span className="next-player">NEXT: <b>{nextPlayer?.name || '—'}</b></span>
       <div className="felt"><div className="table-stitch" /><div className="table-topline"><span>THE TABLE</span><span className="direction">{game.direction === 'Clockwise' ? '↻' : '↺'} &nbsp;{game.direction}</span></div>
         <div className="pile-row"><div className="pile-wrap"><div className="pile-count">{game.drawPileCount}</div><button className="draw-pile" onClick={draw} disabled={!canDraw || busy || Boolean(activePlay) || animationQueue.length > 0} aria-label="Draw a card"><span>U</span><i>UNO</i></button><span className="pile-caption">DRAW PILE</span></div>
           <div className="turn-arrow">→</div><div className="discard-wrap">{displayedTopCard && <CardFace card={displayedTopCard} />}<span className="pile-caption">DISCARD PILE</span></div></div>
@@ -249,7 +260,7 @@ function App() {
     {activePlay?.type === 'draw' && <div className={`draw-flight from-seat-${animatedSeat}`} key={activePlay.animationId} aria-hidden="true"><span>{activePlay.playerName}</span><div className="draw-pile draw-pile-animation"><span>U</span><i>UNO</i></div></div>}
     {activePlay?.type === 'play' && <div className={`play-flight from-seat-${animatedSeat}`} key={activePlay.animationId} aria-hidden="true"><span>{activePlay.playerName}</span><CardFace card={activePlay.card} disabled /></div>}
     {wildCard && <div className="modal-backdrop" role="presentation" onClick={() => setWildCard(null)}><section className="color-modal" role="dialog" aria-modal="true" aria-labelledby="color-title" onClick={e => e.stopPropagation()}><button className="close-modal" onClick={() => setWildCard(null)}>×</button><p className="eyebrow">A WILD MOVE</p><h2 id="color-title">Choose a color</h2><p>Set the color that continues the round.</p><div className="color-options">{colors.map(color => <button key={color} className={`color-choice ${colorsClass[color]}`} onClick={() => { const selected = wildCard; setWildCard(null); play(selected, color); }}><span />{color}</button>)}</div></section></div>}
-    {(game.status === 'round-complete' || game.status === 'completed') && <div className="modal-backdrop"><section className="color-modal result-modal"><div className="result-star">✳</div><p className="eyebrow">{game.status === 'completed' ? 'GAME COMPLETE' : 'ROUND COMPLETE'}</p><h2>{game.status === 'completed' ? 'Game over' : `${game.winner} wins the round!`}</h2><div className="score-summary">{game.players.map(player => <div key={player.id}><span>{player.name}</span><b>{player.score} pts</b></div>)}</div>{game.status === 'round-complete' && <button className="primary-button" onClick={() => restart(false)}>Next round <span>↻</span></button>}{game.status === 'completed' && <button className="primary-button" onClick={() => restart(true)}>Play again <span>↻</span></button>}</section></div>}
+    {(game.status === 'round-complete' || game.status === 'completed') && <div className="modal-backdrop"><section className="color-modal result-modal"><div className="result-star">✳</div><p className="eyebrow">{game.status === 'completed' ? 'GAME COMPLETE' : 'ROUND COMPLETE'}</p><h2>{game.status === 'completed' ? `${game.winner || 'A player'} wins the game!` : `${game.winner} wins the round!`}</h2><div className="score-summary">{game.players.map(player => <div key={player.id}><span>{player.name}</span><b>{player.score} pts</b></div>)}</div>{game.status === 'round-complete' && <button className="primary-button" onClick={() => restart(false)}>Next round <span>↻</span></button>}{game.status === 'completed' && <button className="primary-button" onClick={() => restart(true)}>Play again <span>↻</span></button>}</section></div>}
   </main>;
 }
 

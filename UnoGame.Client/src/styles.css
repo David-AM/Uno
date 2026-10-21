@@ -295,7 +295,9 @@ button:disabled {
     display: flex;
     justify-content: center;
     gap: clamp(16px, 5vw, 68px);
-    margin-bottom: 17px
+    margin-bottom: 17px;
+    position: relative;
+    z-index: 4
 }
 
 .opponent {
@@ -388,6 +390,28 @@ button:disabled {
 
 .direction {
     color: #d3ee74aa
+}
+
+.next-player {
+    position: absolute;
+    top: 30vh;
+    right: 12%;
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border: 1px solid #d3ee7466;
+    border-radius: 20px;
+    background: #14251def;
+    color: #f3efdf;
+    font-size: 12px;
+    letter-spacing: .08em
+}
+
+.next-player b {
+    color: var(--lime);
+    font-weight: 500
 }
 
 .pile-row {
@@ -768,6 +792,7 @@ button:disabled {
 .draw-flight.from-seat-1 { --flight-x: -29vw; --flight-y: -31vh }
 .draw-flight.from-seat-2 { --flight-x: 0vw; --flight-y: -38vh }
 .draw-flight.from-seat-3 { --flight-x: 29vw; --flight-y: -31vh }
+.draw-flight.from-seat-0 { --flight-x: -13vw; --flight-y: 39vh }
 
 .draw-flight > span {
     padding: 5px 9px;
@@ -993,7 +1018,13 @@ button:disabled {
     }
 
     .table-topline {
-        top: 20px
+        top: 20px;
+        gap: 8px;
+        font-size: 12px
+    }
+
+    .next-player {
+        font-size: 9px
     }
 
     .active-color {
@@ -1009,7 +1040,7 @@ button:disabled {
     }
 
     .subtle-button {
-        padding: 8px;
+        padding: 10px;
         font-size: 9px
     }
 
@@ -1083,8 +1114,9 @@ button:disabled {
 
 .catch-button {
     position: absolute;
-    top: 42px;
+    top: calc(100% + 6px);
     left: 44px;
+    z-index: 4;
     white-space: nowrap;
     border: 1px solid #d3ee7466;
     background: #17261d;
@@ -1098,7 +1130,7 @@ button:disabled {
     opacity: .4
 }.status-line.alert{border-color:#f6b94f99;background:linear-gradient(90deg,#69451c66,#211d13);color:#ffe2a4;box-shadow:0 0 24px #f6b94f1c}.status-line.alert .status-icon{color:#ffc65c}.status-line.alert b{color:#ffd17c}
 
-.playing-card.symbol-action .card-center{font-size:24px}.hand-cards .playing-card.symbol-action .card-center{font-size:clamp(14.5px,2vw,22px)}.floating-alert{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:50;width:min(540px,calc(100vw - 32px));display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid #f6b94f99;background:linear-gradient(100deg,#68451ddd,#211d13ee);box-shadow:0 12px 42px #0009,0 0 26px #f6b94f2a;color:#ffe2a4;font-size:13px;font-weight:600;animation:alert-arrive .24s ease-out both;pointer-events:none}.floating-alert span{font-size:18px;color:#ffd17c}.play-flight{--flight-x:0vw;--flight-y:0vh;--flight-rotation:0deg;position:fixed;left:50%;top:48%;z-index:45;display:grid;justify-items:center;gap:8px;pointer-events:none;animation:card-flight .8s cubic-bezier(.18,.76,.24,1) both}.play-flight.from-seat-0{--flight-x:-13vw;--flight-y:39vh;--flight-rotation:-12deg}.play-flight.from-seat-1{--flight-x:-29vw;--flight-y:-31vh;--flight-rotation:10deg}.play-flight.from-seat-2{--flight-x:0vw;--flight-y:-38vh;--flight-rotation:-8deg}.play-flight.from-seat-3{--flight-x:29vw;--flight-y:-31vh;--flight-rotation:12deg}.play-flight>span{padding:5px 9px;border:1px solid #d3ee7477;border-radius:20px;background:#14251deF;color:var(--lime);font:9px 'DM Mono',monospace;letter-spacing:.07em}.play-flight .playing-card{width:76px;height:112px}.play-flight .card-center{font-size:36px}.play-flight .playing-card.symbol-action .card-center{font-size:18px}@keyframes card-flight{0%{opacity:0;transform:translate(calc(-50% + var(--flight-x)),calc(-50% + var(--flight-y))) rotate(var(--flight-rotation)) scale(.58)}18%{opacity:1}72%{opacity:1;transform:translate(-50%,-50%) rotate(0) scale(1.06)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}@keyframes alert-arrive{from{opacity:0;translate:0 -12px}to{opacity:1;translate:0 0}}@media(prefers-reduced-motion:reduce){.play-flight,.floating-alert{animation-duration:.15s}}
+.playing-card.symbol-action .card-center{font-size:20px}.hand-cards .playing-card.symbol-action .card-center{font-size:clamp(14.5px,2vw,22px)}.floating-alert{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:50;width:min(540px,calc(100vw - 32px));display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid #f6b94f99;background:linear-gradient(100deg,#68451ddd,#211d13ee);box-shadow:0 12px 42px #0009,0 0 26px #f6b94f2a;color:#ffe2a4;font-size:13px;font-weight:600;animation:alert-arrive .24s ease-out both;pointer-events:none}.floating-alert span{font-size:18px;color:#ffd17c}.play-flight{--flight-x:0vw;--flight-y:0vh;--flight-rotation:0deg;position:fixed;left:50%;top:48%;z-index:45;display:grid;justify-items:center;gap:8px;pointer-events:none;animation:card-flight .8s cubic-bezier(.18,.76,.24,1) both}.play-flight.from-seat-0{--flight-x:-13vw;--flight-y:39vh;--flight-rotation:-12deg}.play-flight.from-seat-1{--flight-x:-29vw;--flight-y:-31vh;--flight-rotation:10deg}.play-flight.from-seat-2{--flight-x:0vw;--flight-y:-38vh;--flight-rotation:-8deg}.play-flight.from-seat-3{--flight-x:29vw;--flight-y:-31vh;--flight-rotation:12deg}.play-flight>span{padding:5px 9px;border:1px solid #d3ee7477;border-radius:20px;background:#14251deF;color:var(--lime);font:9px 'DM Mono',monospace;letter-spacing:.07em}.play-flight .playing-card{width:76px;height:112px}.play-flight .card-center{font-size:36px}.play-flight .playing-card.symbol-action .card-center{font-size:18px}@keyframes card-flight{0%{opacity:0;transform:translate(calc(-50% + var(--flight-x)),calc(-50% + var(--flight-y))) rotate(var(--flight-rotation)) scale(.58)}18%{opacity:1}72%{opacity:1;transform:translate(-50%,-50%) rotate(0) scale(1.06)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}@keyframes alert-arrive{from{opacity:0;translate:0 -12px}to{opacity:1;translate:0 0}}@media(prefers-reduced-motion:reduce){.play-flight,.floating-alert{animation-duration:.15s}}
 
 .table-area{margin-bottom:8px}.swal2-container.swal2-top{z-index:1000!important;padding-top:14px!important}.swal2-popup.uno-swal-popup{width:min(540px,calc(100vw - 32px));border:1px solid #f6b94f99;background:linear-gradient(100deg,#68451d,#211d13);box-shadow:0 12px 42px #0009,0 0 26px #f6b94f2a}.swal2-title.uno-swal-title{color:#ffe2a4;font:600 17px 'DM Sans',sans-serif}.swal2-timer-progress-bar{background:#ffc65c!important}
 .swal2-html-container.uno-swal-text{color:#fff!important}

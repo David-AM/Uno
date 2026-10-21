@@ -112,6 +112,8 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
             if (_game!.GetCurrentPlayer() != player || _game.GetPlayerHand(player).Count != 2)
                 return (View(playerId), "Call UNO on your turn with two cards.");
             _game.SayUno(player);
+            QueueEvent(new GameEventDto(
+                "alert", player.Id, player.Name, null, $"{player.Name} called UNO."));
             return (View(playerId, consumeEvents: false), null);
         }
     }
@@ -199,8 +201,10 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
     {
         game.OnCardPlayed += (player, card) => QueueEvent(new GameEventDto(
             "play", player.Id, player.Name, CardDto.From(card), $"{player.Name} played a card to the discard pile."));
-        game.OnCardDrawn += (player, card) => QueueEvent(new GameEventDto(
-            "draw", player.Id, player.Name, CardDto.From(card), $"{player.Name} drew a card from the draw pile."), player.Id);
+        // Broadcast the animation event to every player, but do not include the
+        // drawn card because opponents must not see another player's hand.
+        game.OnCardDrawn += (player, _) => QueueEvent(new GameEventDto(
+            "draw", player.Id, player.Name, null, $"{player.Name} drew a card from the draw pile."));
         game.OnUnoPenalty += (player, count) => QueueEvent(new GameEventDto(
             "alert", player.Id, player.Name, null, $"{player.Name} was caught without calling UNO and drew {count} cards."));
         game.OnTurnChanged += player => QueueEvent(new GameEventDto(
