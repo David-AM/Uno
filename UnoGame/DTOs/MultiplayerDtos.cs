@@ -20,16 +20,17 @@ public sealed record LobbyResponse(string LobbyId, bool IsPlaying, int MinPlayer
     int? HostPlayerId, IReadOnlyList<LobbyPlayerResponse> Players);
 
 /// <summary>A player visible in the lobby.</summary>
-public sealed record LobbyPlayerResponse(int Id, string Name);
+public sealed record LobbyPlayerResponse(int Id, string Name, bool IsConnected = true, int? ReconnectSecondsRemaining = null);
 
 /// <summary>Result returned after a player joins.</summary>
-public sealed record JoinLobbyResponse(int PlayerId, bool IsHost, LobbyResponse Lobby, GameViewDto? Game);
+public sealed record JoinLobbyResponse(int PlayerId, bool IsHost, LobbyResponse Lobby, GameViewDto? Game, string ReconnectToken);
 
 /// <summary>Payload for playing a card in the multiplayer game.</summary>
 public sealed record MultiplayerPlayRequest(int PlayerId, int CardId, CardColor? ChosenColor);
 
 /// <summary>Payload identifying the player performing an action.</summary>
 public sealed record MultiplayerPlayerRequest(int PlayerId);
+public sealed record MultiplayerOpeningColorRequest(int PlayerId, CardColor Color);
 
 /// <summary>Payload identifying a target for a UNO catch.</summary>
 public sealed record MultiplayerCatchUnoRequest(int PlayerId, int TargetPlayerId);

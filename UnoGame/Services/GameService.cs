@@ -14,6 +14,7 @@ public interface IGameService
     GameViewDto? SayUno(string id, out string? error);
     GameViewDto? CatchUno(string id, int targetPlayerId, out string? error);
     GameViewDto? ChallengeDrawFour(string id, out string? error);
+    GameViewDto? ChooseOpeningColor(string id, CardColor color, out string? error);
     GameViewDto? Restart(string id, bool resetScores = false);
 }
 
@@ -118,6 +119,15 @@ public sealed class GameService : IGameService
             return View(s, includeRecentPlays: true);
         }
     }
+    public GameViewDto? ChooseOpeningColor(string id, CardColor color, out string? error)
+    {
+        error = null; if (!_games.TryGetValue(id, out var s)) return null;
+        lock (s.Gate)
+        {
+            if (!s.Game.ChooseOpeningColor(s.Human, color)) error = "Choose a valid color before playing.";
+            return View(s);
+        }
+    }
     public GameViewDto? Restart(string id, bool resetScores = false)
     {
         if (!_games.TryGetValue(id, out var s)) return null;
@@ -129,6 +139,12 @@ public sealed class GameService : IGameService
         while (!game.IsGameOver && game.GetCurrentPlayer() != s.Human && guard++ < 12)
         {
             var ai = game.GetCurrentPlayer(); var hand = game.GetPlayerHand(ai);
+            if (game.RequiresOpeningColorChoice)
+            {
+                var openingColor = hand.Where(c => c.Color != CardColor.Wild).GroupBy(c => c.Color).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefault();
+                game.ChooseOpeningColor(ai, openingColor is CardColor.Red or CardColor.Blue or CardColor.Green or CardColor.Yellow ? openingColor : CardColor.Red);
+                continue;
+            }
             var playable = hand.Where(game.CanPlayThisCard).OrderByDescending(c => c.Action is null ? 0 : 1).FirstOrDefault();
             if (playable is null)
             {
@@ -174,6 +190,6 @@ public sealed class GameService : IGameService
         return new GameViewDto(s.Id, status, g.Winner?.Name, s.Human.Id,
             s.Players.Select(p => new PlayerDto(p.Id, p.Name, g.GetPlayerHand(p).Count, p == g.GetCurrentPlayer(), p == s.Human, g.GetPlayerScore(p))).ToArray(),
             hand.Select(CardDto.From).ToArray(), g.GetTopCard() is { } top ? CardDto.From(top) : null, g.GetActiveColor(), g.Table.DrawPile.TotalCards,
-            g.HasDrawnThisTurn, g.CanChallengeDrawFour(s.Human), g.PendingDrawCount, g.Direction.ToString(), s.Message, s.AlertMessage, s.AlertVersion, recentPlays, recentEvents, s.RoundNumber);
+            g.HasDrawnThisTurn, g.CanChallengeDrawFour(s.Human), g.PendingDrawCount, g.RequiresOpeningColorChoice && g.GetCurrentPlayer() == s.Human, g.Direction.ToString(), s.Message, s.AlertMessage, s.AlertVersion, recentPlays, recentEvents, s.RoundNumber);
     }
 }

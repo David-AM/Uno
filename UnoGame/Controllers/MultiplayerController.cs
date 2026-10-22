@@ -19,7 +19,9 @@ public sealed class MultiplayerController(IMultiplayerLobbyService lobby) : Cont
     [HttpPost("start")]
     public ActionResult<GameViewDto> Start(MultiplayerPlayerRequest request) => Action(lobby.Start(request.PlayerId));
     [HttpGet("game/{playerId:int}")]
-    public ActionResult<GameViewDto> Game(int playerId) => lobby.GetGame(playerId) is { } game ? Ok(game) : NotFound(new { error = "The game is not available." });
+    public ActionResult<GameViewDto> Game(int playerId, [FromQuery] string reconnectToken) =>
+        lobby.IsReconnectTokenValid(playerId, reconnectToken) && lobby.GetGame(playerId) is { } game
+            ? Ok(game) : NotFound(new { error = "The game is not available." });
     [HttpPost("game/play")]
     public ActionResult<GameViewDto> Play(MultiplayerPlayRequest request) => Action(lobby.Play(request.PlayerId, request.CardId, request.ChosenColor));
     [HttpPost("game/draw")]
@@ -32,6 +34,8 @@ public sealed class MultiplayerController(IMultiplayerLobbyService lobby) : Cont
     public ActionResult<GameViewDto> CatchUno(MultiplayerCatchUnoRequest request) => Action(lobby.CatchUno(request.PlayerId, request.TargetPlayerId));
     [HttpPost("game/challenge-draw-four")]
     public ActionResult<GameViewDto> ChallengeDrawFour(MultiplayerPlayerRequest request) => Action(lobby.ChallengeDrawFour(request.PlayerId));
+    [HttpPost("game/opening-color")]
+    public ActionResult<GameViewDto> OpeningColor(MultiplayerOpeningColorRequest request) => Action(lobby.ChooseOpeningColor(request.PlayerId, request.Color));
     [HttpPost("restart")]
     public ActionResult<GameViewDto> Restart(MultiplayerPlayerRequest request) => lobby.Restart(request.PlayerId) is { } game ? Ok(game) : NotFound(new { error = "Only the host can restart the game." });
     private ActionResult<GameViewDto> Action((GameViewDto? Result, string? Error) result) => result.Result is null ? NotFound(new { error = result.Error }) : result.Error is not null ? BadRequest(new { error = result.Error }) : Ok(result.Result);

@@ -16,6 +16,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 }));
 builder.Services.AddSingleton<IGameService, GameService>();
 builder.Services.AddSingleton<IMultiplayerLobbyService, MultiplayerLobbyService>();
+builder.Services.AddHostedService<MultiplayerPresenceMonitor>();
 builder.Services.AddSignalR().AddJsonProtocol(options =>
     options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
