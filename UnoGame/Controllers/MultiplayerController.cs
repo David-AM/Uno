@@ -30,6 +30,8 @@ public sealed class MultiplayerController(IMultiplayerLobbyService lobby) : Cont
     public ActionResult<GameViewDto> Uno(MultiplayerPlayerRequest request) => Action(lobby.SayUno(request.PlayerId));
     [HttpPost("game/catch-uno")]
     public ActionResult<GameViewDto> CatchUno(MultiplayerCatchUnoRequest request) => Action(lobby.CatchUno(request.PlayerId, request.TargetPlayerId));
+    [HttpPost("game/challenge-draw-four")]
+    public ActionResult<GameViewDto> ChallengeDrawFour(MultiplayerPlayerRequest request) => Action(lobby.ChallengeDrawFour(request.PlayerId));
     [HttpPost("restart")]
     public ActionResult<GameViewDto> Restart(MultiplayerPlayerRequest request) => lobby.Restart(request.PlayerId) is { } game ? Ok(game) : NotFound(new { error = "Only the host can restart the game." });
     private ActionResult<GameViewDto> Action((GameViewDto? Result, string? Error) result) => result.Result is null ? NotFound(new { error = result.Error }) : result.Error is not null ? BadRequest(new { error = result.Error }) : Ok(result.Result);

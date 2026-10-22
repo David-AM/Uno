@@ -29,6 +29,7 @@ public sealed class MultiplayerHub(IMultiplayerLobbyService lobby) : Hub
     public async Task Pass(int playerId) => await Execute(lobby.Pass(playerId));
     public async Task SayUno(int playerId) => await Execute(lobby.SayUno(playerId));
     public async Task CatchUno(int playerId, int targetPlayerId) => await Execute(lobby.CatchUno(playerId, targetPlayerId));
+    public async Task ChallengeDrawFour(int playerId) => await Execute(lobby.ChallengeDrawFour(playerId));
     public async Task Restart(int playerId, bool resetScores = false)
     {
         if (lobby.Restart(playerId, resetScores) is null) await Clients.Caller.SendAsync("actionError", "Only the host can restart the game.");

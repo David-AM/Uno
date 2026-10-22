@@ -9,6 +9,8 @@ public sealed class GameController
     private int _currentPlayerIndex;
     private TurnDirection _direction = TurnDirection.Clockwise;
     private int _nextDrawPenalty;
+    private Player? _drawFourPlayer;
+    private CardColor _drawFourActiveColor;
     private bool _skipNext;
     private bool _hasDrawnThisTurn;
     private int _nextCardId;
@@ -34,6 +36,7 @@ public sealed class GameController
     public TurnDirection Direction => _direction;
     public bool HasDrawnThisTurn => _hasDrawnThisTurn;
     public int PendingDrawCount => _nextDrawPenalty;
+    public bool CanChallengeDrawFour(Player player) => _nextDrawPenalty == 4 && _drawFourPlayer is not null && ReferenceEquals(GetCurrentPlayer(), player);
 
     public GameController(List<Player> players, Random? random = null, IReadOnlyDictionary<Player, int>? previousScores = null)
     {
@@ -52,11 +55,18 @@ public sealed class GameController
         _table.DrawPile.Cards.Clear(); _table.DiscardPile.Cards.Clear();
         foreach (var hand in _cardInHands.Values) hand.Clear();
         foreach (var player in _hasSaidUno.Keys) _hasSaidUno[player] = false;
-        _currentPlayerIndex = 0; _direction = TurnDirection.Clockwise; _nextDrawPenalty = 0; _skipNext = false; _hasDrawnThisTurn = false; Winner = null;
+        _currentPlayerIndex = 0; _direction = TurnDirection.Clockwise; _nextDrawPenalty = 0; _drawFourPlayer = null; _drawFourActiveColor = default; _skipNext = false; _hasDrawnThisTurn = false; Winner = null;
         InitializeStandardDeck(); ShuffleDeck();
         foreach (var player in _players) for (var i = 0; i < 7; i++) DrawCardFromDeckOnly(player);
         var first = DrawCardFromDeckOnly();
-        while (first is not null && first.Color == CardColor.Wild) { _table.DrawPile.Cards.Add(first); ShuffleDeck(); first = DrawCardFromDeckOnly(); }
+        // Wild Draw Four cannot be the opening discard. Return any Wild card
+        // to the draw pile and choose another opening card.
+        while (first is not null && first.Color == CardColor.Wild)
+        {
+            _table.DrawPile.Cards.Add(first);
+            ShuffleDeck();
+            first = DrawCardFromDeckOnly();
+        }
         if (first is null) throw new InvalidOperationException("Unable to deal an opening card.");
         _table.DiscardPile.Cards.Add(first); _table.ActiveColor = first.Color;
         ApplyOpeningCard(first); OnTurnChanged?.Invoke(GetCurrentPlayer());
@@ -78,13 +88,16 @@ public sealed class GameController
         if (_nextDrawPenalty > 0) return false;
         if (_table.DiscardPile.Cards.Count == 0) return true;
         var top = GetTopCard()!;
-        if (card.Color == CardColor.Wild) return card.Action != ActionType.WildDrawFour || !GetPlayerHand(GetCurrentPlayer()).Any(c => c.Color == _table.ActiveColor);
+        // A Wild Draw Four may be played provisionally. The required player can
+        // challenge it, and the player's hand is checked at challenge time.
+        if (card.Color == CardColor.Wild) return true;
         return card.Color == _table.ActiveColor || (card.Value is not null && card.Value == top.Value) || (card.Action is not null && card.Action == top.Action);
     }
     public bool PlayCard(Player player, Card card, CardColor? chosenColor)
     {
         if (IsGameOver || !ReferenceEquals(GetCurrentPlayer(), player) || !HasCardInHand(player, card) || !CanPlayThisCard(card)) return false;
         if (card.Color == CardColor.Wild && chosenColor is not (CardColor.Red or CardColor.Blue or CardColor.Green or CardColor.Yellow)) return false;
+        var previousActiveColor = _table.ActiveColor;
         RemoveCardFromHand(player, card); _table.DiscardPile.Cards.Add(card);
         _table.ActiveColor = card.Color == CardColor.Wild ? chosenColor!.Value : card.Color;
         if (card.Color == CardColor.Wild) OnColorChanged?.Invoke(_table.ActiveColor);
@@ -96,7 +109,8 @@ public sealed class GameController
             // to a catch, but the penalty is not applied automatically.
             else OnPlayerCardRemainOne?.Invoke(player);
         }
-        if (CheckGameWinner() is not null) return true;
+        // A final Wild Draw Four wins immediately; only non-final plays can be challenged.
+        if ((card.Action != ActionType.WildDrawFour || _cardInHands[player].Count == 0) && CheckGameWinner() is not null) return true;
         switch (card.Action)
         {
             case ActionType.Reverse:
@@ -107,18 +121,53 @@ public sealed class GameController
                 break;
             case ActionType.Skip: _skipNext = true; break;
             case ActionType.DrawTwo: _nextDrawPenalty += 2; break;
-            case ActionType.WildDrawFour: _nextDrawPenalty += 4; break;
+            case ActionType.WildDrawFour:
+                _nextDrawPenalty = 4; _drawFourPlayer = player; _drawFourActiveColor = previousActiveColor;
+                break;
         }
         NextTurn(); return true;
     }
     public Card? DrawCard(Player player)
     {
         if (IsGameOver || !ReferenceEquals(GetCurrentPlayer(), player)) return null;
+        if (_nextDrawPenalty > 0)
+        {
+            var count = _nextDrawPenalty;
+            _nextDrawPenalty = 0; _drawFourPlayer = null;
+            ForceDrawCards(player, count);
+            OnPenaltyCardsDrawn?.Invoke(player, count);
+            NextTurn();
+            CheckGameWinner();
+            return null;
+        }
         var card = DrawCardFromDeckOnly(player);
         _hasSaidUno[player] = false;
         _hasDrawnThisTurn = true;
         if (card is not null) { OnCardDrawn?.Invoke(player, card); OnCardsDrawn?.Invoke(player, 1); }
         return card;
+    }
+    public bool ChallengeDrawFour(Player challenger, out bool challengeSucceeded)
+    {
+        challengeSucceeded = false;
+        if (IsGameOver || !CanChallengeDrawFour(challenger)) return false;
+        var playedBy = _drawFourPlayer!;
+        challengeSucceeded = HasPlayableNonWildCard(GetPlayerHand(playedBy), GetTopCard()!, _drawFourActiveColor);
+        _nextDrawPenalty = 0; _drawFourPlayer = null;
+        if (challengeSucceeded)
+        {
+            ForceDrawCards(playedBy, 4);
+            OnPenaltyCardsDrawn?.Invoke(playedBy, 4);
+            CheckGameWinner();
+            OnTurnChanged?.Invoke(GetCurrentPlayer());
+        }
+        else
+        {
+            ForceDrawCards(challenger, 6);
+            OnPenaltyCardsDrawn?.Invoke(challenger, 6);
+            NextTurn();
+            CheckGameWinner();
+        }
+        return true;
     }
     public void PassTurn(Player player) { if (!ReferenceEquals(GetCurrentPlayer(), player)) throw new InvalidOperationException("It is not this player's turn."); if (!_hasDrawnThisTurn) throw new InvalidOperationException("Draw a card before passing."); _hasSaidUno[player] = false; NextTurn(); }
     public void SayUno(Player player) { if (ReferenceEquals(GetCurrentPlayer(), player) && GetPlayerHand(player).Count == 2) _hasSaidUno[player] = true; }
@@ -141,7 +190,7 @@ public sealed class GameController
         var steps = _skipNext ? 2 : 1; _skipNext = false;
         _hasDrawnThisTurn = false;
         _currentPlayerIndex = (_currentPlayerIndex + (int)_direction * steps + _players.Count) % _players.Count;
-        if (_nextDrawPenalty > 0)
+        if (_nextDrawPenalty > 0 && _drawFourPlayer is null)
         {
             var target = GetCurrentPlayer();
             var count = _nextDrawPenalty;
@@ -176,5 +225,7 @@ public sealed class GameController
     public int CalculateRoundScore(Player winner) => _players.Where(p => p != winner).Sum(p => _cardInHands[p].Sum(c => c.ScoreValue));
     public int GetPlayerScore(Player player) => _playerScores[player];
     public IReadOnlyDictionary<Player, int> GetPlayerScores() => _playerScores;
+    private static bool HasPlayableNonWildCard(IEnumerable<Card> hand, Card top, CardColor activeColor) => hand.Any(card => card.Color != CardColor.Wild &&
+        (card.Color == activeColor || (card.Value is not null && card.Value == top.Value) || (card.Action is not null && card.Action == top.Action)));
     private void ApplyOpeningCard(Card card) { if (card.Action == ActionType.Reverse) ReverseTurnDirection(); else if (card.Action == ActionType.Skip) NextTurn(); else if (card.Action == ActionType.DrawTwo) { ForceDrawCards(GetCurrentPlayer(), 2); NextTurn(); } }
 }

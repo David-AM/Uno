@@ -15,5 +15,5 @@ public sealed record PlayerPlayDto(int PlayerId, string PlayerName, CardDto Card
 public sealed record GameEventDto(string Type, int? PlayerId, string? PlayerName, CardDto? Card, string Message, IReadOnlyList<CardDto>? Hand = null);
 public sealed record GameViewDto(string GameId, string Status, string? Winner, int HumanPlayerId,
     IReadOnlyList<PlayerDto> Players, IReadOnlyList<CardDto> Hand, CardDto? TopCard, CardColor ActiveColor,
-    int DrawPileCount, bool HasDrawnThisTurn, string Direction, string? Message, string? AlertMessage,
+    int DrawPileCount, bool HasDrawnThisTurn, bool CanChallengeDrawFour, int PendingDrawCount, string Direction, string? Message, string? AlertMessage,
     int AlertVersion, IReadOnlyList<PlayerPlayDto> RecentPlays, IReadOnlyList<GameEventDto> RecentEvents, int RoundNumber);

@@ -14,6 +14,7 @@ public interface IMultiplayerLobbyService
     (GameViewDto? Result, string? Error) Pass(int playerId);
     (GameViewDto? Result, string? Error) SayUno(int playerId);
     (GameViewDto? Result, string? Error) CatchUno(int playerId, int targetPlayerId);
+    (GameViewDto? Result, string? Error) ChallengeDrawFour(int playerId);
     GameViewDto? Restart(int playerId, bool resetScores = false);
     void RemoveDisconnectedPlayer(int playerId);
 }
@@ -130,6 +131,19 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
         }
     }
 
+    public (GameViewDto? Result, string? Error) ChallengeDrawFour(int playerId)
+    {
+        lock (_gate)
+        {
+            if (!TryGetGamePlayer(playerId, out var player, out var error)) return (null, error);
+            if (!_game!.CanChallengeDrawFour(player)) return (View(playerId), "You can only challenge the player who just played a Wild Draw Four.");
+            _game.ChallengeDrawFour(player, out var succeeded);
+            QueueEvent(new GameEventDto("alert", player.Id, player.Name, null,
+                succeeded ? $"{player.Name}'s challenge succeeded. The Wild Draw Four player drew 4 cards." : $"{player.Name}'s challenge failed. {player.Name} drew 6 cards."));
+            return (View(playerId, consumeEvents: false), null);
+        }
+    }
+
     public GameViewDto? Restart(int playerId, bool resetScores = false)
     {
         lock (_gate)
@@ -192,7 +206,7 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
                 p == game.GetCurrentPlayer(), p == human, game.GetPlayerScore(p))).ToArray(),
             game.GetPlayerHand(human).Select(CardDto.From).ToArray(),
             game.GetTopCard() is { } top ? CardDto.From(top) : null, game.GetActiveColor(),
-            game.Table.DrawPile.TotalCards, game.HasDrawnThisTurn, game.Direction.ToString(), null, null, 0,
+            game.Table.DrawPile.TotalCards, game.HasDrawnThisTurn, game.CanChallengeDrawFour(human), game.PendingDrawCount, game.Direction.ToString(), null, null, 0,
             events.Where(e => e.Type == "play" && e.PlayerId is not null)
                 .Select(e => new PlayerPlayDto(e.PlayerId!.Value, e.PlayerName!, e.Card!)).ToArray(), events, _roundNumber);
     }

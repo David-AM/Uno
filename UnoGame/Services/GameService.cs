@@ -13,6 +13,7 @@ public interface IGameService
     GameViewDto? Pass(string id, out string? error);
     GameViewDto? SayUno(string id, out string? error);
     GameViewDto? CatchUno(string id, int targetPlayerId, out string? error);
+    GameViewDto? ChallengeDrawFour(string id, out string? error);
     GameViewDto? Restart(string id, bool resetScores = false);
 }
 
@@ -106,6 +107,17 @@ public sealed class GameService : IGameService
             return View(s, includeRecentPlays: true);
         }
     }
+    public GameViewDto? ChallengeDrawFour(string id, out string? error)
+    {
+        error = null; if (!_games.TryGetValue(id, out var s)) return null;
+        lock (s.Gate)
+        {
+            if (!s.Game.ChallengeDrawFour(s.Human, out var succeeded)) { error = "You cannot challenge a Wild Draw Four right now."; return View(s); }
+            s.Message = succeeded ? "Challenge succeeded. The Wild Draw Four player drew 4 cards." : "Challenge failed. You drew 6 cards.";
+            if (!succeeded) RunAiTurns(s);
+            return View(s, includeRecentPlays: true);
+        }
+    }
     public GameViewDto? Restart(string id, bool resetScores = false)
     {
         if (!_games.TryGetValue(id, out var s)) return null;
@@ -162,6 +174,6 @@ public sealed class GameService : IGameService
         return new GameViewDto(s.Id, status, g.Winner?.Name, s.Human.Id,
             s.Players.Select(p => new PlayerDto(p.Id, p.Name, g.GetPlayerHand(p).Count, p == g.GetCurrentPlayer(), p == s.Human, g.GetPlayerScore(p))).ToArray(),
             hand.Select(CardDto.From).ToArray(), g.GetTopCard() is { } top ? CardDto.From(top) : null, g.GetActiveColor(), g.Table.DrawPile.TotalCards,
-            g.HasDrawnThisTurn, g.Direction.ToString(), s.Message, s.AlertMessage, s.AlertVersion, recentPlays, recentEvents, s.RoundNumber);
+            g.HasDrawnThisTurn, g.CanChallengeDrawFour(s.Human), g.PendingDrawCount, g.Direction.ToString(), s.Message, s.AlertMessage, s.AlertVersion, recentPlays, recentEvents, s.RoundNumber);
     }
 }
