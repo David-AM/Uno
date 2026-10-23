@@ -27,6 +27,17 @@ public sealed class MultiplayerHub(IMultiplayerLobbyService lobby) : Hub
     public async Task CatchUno(int playerId, int targetPlayerId) => await Execute(playerId, () => lobby.CatchUno(playerId, targetPlayerId));
     public async Task ChallengeDrawFour(int playerId) => await Execute(playerId, () => lobby.ChallengeDrawFour(playerId));
     public async Task ChooseOpeningColor(int playerId, CardColor color) => await Execute(playerId, () => lobby.ChooseOpeningColor(playerId, color));
+    public async Task LeaveLobby(int playerId)
+    {
+        if (!lobby.IsConnectionAuthorized(playerId, Context.ConnectionId))
+        {
+            await Clients.Caller.SendAsync("actionError", "You are not connected to this lobby.");
+            return;
+        }
+        var result = lobby.LeaveLobby(playerId);
+        if (result.Error is not null) await Clients.Caller.SendAsync("actionError", result.Error);
+        await Broadcast();
+    }
     public async Task Restart(int playerId, bool resetScores = false)
     {
         if (!lobby.IsConnectionAuthorized(playerId, Context.ConnectionId)) await Clients.Caller.SendAsync("actionError", "You are disconnected from the match.");

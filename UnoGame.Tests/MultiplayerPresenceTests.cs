@@ -53,6 +53,23 @@ public sealed class MultiplayerPresenceTests
     }
 
     [Fact]
+    public void PlayerCanRejoinActiveGameByMatchingName()
+    {
+        var now = DateTime.UtcNow;
+        var (service, host, member) = StartMatch(() => now);
+        Assert.True(service.DisconnectConnection(member.ConnectionId));
+
+        var rejoin = service.Join(" grace ", 1, false);
+
+        Assert.Null(rejoin.Error);
+        Assert.NotNull(rejoin.Result);
+        Assert.Equal(member.PlayerId, rejoin.Result!.PlayerId);
+        Assert.Equal(member.Token, rejoin.Result.ReconnectToken);
+        Assert.Equal(member.PlayerId, rejoin.Result.Game!.HumanPlayerId);
+        Assert.True(service.RegisterConnection(member.PlayerId, rejoin.Result.ReconnectToken, "member-rejoined", out _));
+    }
+
+    [Fact]
     public void ExpiredDisconnectForfeitsMatchOnlyOnce()
     {
         var now = DateTime.UtcNow;

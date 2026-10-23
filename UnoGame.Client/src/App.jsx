@@ -34,6 +34,7 @@ function App() {
   const [connection, setConnection] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('offline');
   const [terminalMessage, setTerminalMessage] = useState('');
+  const [rejoiningGame, setRejoiningGame] = useState(false);
   const [mode, setMode] = useState(null);
   const [friendsRole, setFriendsRole] = useState(null);
   const [name, setName] = useState('');
@@ -55,10 +56,19 @@ function App() {
       : null;
   const returnToLobby = () => {
     connection?.stop();
-    localStorage.removeItem('uno.playerId');
-    localStorage.removeItem('uno.reconnectToken');
+    sessionStorage.removeItem('uno.playerId');
+    sessionStorage.removeItem('uno.reconnectToken');
     setConnection(null); setPlayerId(null); setLobby(null); setGame(null);
     setMode(null); setFriendsRole(null); setTerminalMessage(''); setConnectionStatus('offline'); setError('');
+  };
+  const leaveLobby = async () => {
+    if (!connection || !playerId) returnToLobby();
+    else {
+      setBusy(true);
+      try { await connection.invoke('LeaveLobby', playerId); returnToLobby(); }
+      catch (e) { setError(e.message); }
+      finally { setBusy(false); }
+    }
   };
 
   const act = async (operation) => {
@@ -80,8 +90,8 @@ function App() {
       hostLobby: friendsRole === 'host',
     });
     setPlayerId(joined.playerId); setLobby(joined.lobby);
-    localStorage.setItem('uno.playerId', String(joined.playerId));
-    localStorage.setItem('uno.reconnectToken', joined.reconnectToken);
+    sessionStorage.setItem('uno.playerId', String(joined.playerId));
+    sessionStorage.setItem('uno.reconnectToken', joined.reconnectToken);
     const hub = new HubConnectionBuilder().withUrl(HUB).withAutomaticReconnect([0, 2000, 10000, 30000]).configureLogging(LogLevel.Warning).build();
     hub.on('lobbyUpdated', setLobby);
     hub.on('gameUpdated', state => { if (state) setGame(state); });
@@ -155,13 +165,14 @@ function App() {
   useEffect(() => () => { connection?.stop(); }, [connection]);
 
   useEffect(() => {
-    const savedPlayerId = Number(localStorage.getItem('uno.playerId'));
-    const savedToken = localStorage.getItem('uno.reconnectToken');
+    const savedPlayerId = Number(sessionStorage.getItem('uno.playerId'));
+    const savedToken = sessionStorage.getItem('uno.reconnectToken');
     if (!savedPlayerId || !savedToken || connection || game) return undefined;
+    setRejoiningGame(true);
     let cancelled = false;
     const hub = new HubConnectionBuilder().withUrl(HUB).withAutomaticReconnect([0, 2000, 10000, 30000]).configureLogging(LogLevel.Warning).build();
     hub.on('lobbyUpdated', state => { setLobby(state); setMode('friends'); setFriendsRole(state?.hostPlayerId === savedPlayerId ? 'host' : 'join'); });
-    hub.on('gameUpdated', state => { if (state) setGame(state); });
+    hub.on('gameUpdated', state => { if (state) { setGame(state); setRejoiningGame(false); } });
     hub.on('actionError', setError);
     let terminal = false;
     hub.onreconnecting(() => { if (!terminal) setConnectionStatus('reconnecting'); });
@@ -178,9 +189,15 @@ function App() {
       try {
         await hub.start();
         const state = await hub.invoke('Register', savedPlayerId, savedToken);
-        if (!cancelled) { setPlayerId(savedPlayerId); setConnection(hub); setConnectionStatus('connected'); if (state) setGame(state); }
+        if (!cancelled) {
+          setPlayerId(savedPlayerId); setConnection(hub); setConnectionStatus('connected');
+          const gameState = state || await request(`/lobby/game/${savedPlayerId}?reconnectToken=${encodeURIComponent(savedToken)}`);
+          if (gameState) setGame(gameState);
+          setRejoiningGame(false);
+        }
       } catch (e) {
         if (!cancelled) {
+          setRejoiningGame(false);
           const terminalState = terminalConnectionError(e.message);
           if (terminalState) { terminal = true; setGame(null); setTerminalMessage(terminalState.message); setConnectionStatus(terminalState.status); hub.stop(); }
           else { setError(e.message); setConnectionStatus('disconnected'); }
@@ -284,13 +301,15 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [game?.gameId, game?.hasDrawnThisTurn, isYourTurn, busy, activePlay, animationQueue.length]);
 
+  if (!game && rejoiningGame) return <main className="landing"><section className="welcome-card"><p className="eyebrow">MULTIPLAYER GAME</p><h1>REJOINING<br /><em>GAME…</em></h1><p className="intro">Restoring your place in the active game.</p></section></main>;
+
   if (!game) return <main className="landing">
     <div className="landing-decoration decoration-one" /><div className="landing-decoration decoration-two" />
     <header className="brand clickable-brand" role="button" tabIndex="0" onClick={() => window.location.reload()} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') window.location.reload(); }}><span className="brand-mark">U</span><span>UNO <b>CIHUY</b></span></header>
     <section className="welcome-card"><p className="eyebrow">Yang HOKI Yang Menang</p><h1>BERANI<br /><em>COBA?</em></h1><p className="intro">Lihat kartu lu, atur strategi. Bantai atau dibantai</p>{terminalMessage && <div className="error-message game-error"><p>{terminalMessage}</p><button type="button" className="subtle-button" onClick={returnToLobby}>Return to lobby</button></div>}
       <form onSubmit={e => { e.preventDefault(); if (mode === 'bot' || (mode === 'friends' && friendsRole)) { if (hasName) createGame(); else setError('Enter your name before starting or hosting a game.'); } }}>
         {!mode && <div className="mode-options"><p className="eyebrow">CHOOSE YOUR GAME</p><button type="button" className="primary-button" onClick={() => setMode('bot')}>Play vs bot <span>→</span></button><button type="button" className="subtle-button" onClick={() => setMode('friends')}>Play with friends</button></div>}
-        {lobby && <div className="lobby-panel"><p className="eyebrow">DEMO LOBBY · {lobby.players.length}/{lobby.maxPlayers}</p>{lobby.players.map(player => <p key={player.id}>{player.name}{player.id === lobby.hostPlayerId ? ' · HOST' : ''}</p>)}<small>{lobby.players.length < lobby.minPlayers ? 'Waiting for at least 2 players…' : 'Ready to start'}</small>{lobby.hostPlayerId === playerId && <button type="button" className="primary-button" disabled={busy || lobby.players.length < lobby.minPlayers} onClick={startGame}>Start multiplayer game <span>↗</span></button>}</div>}
+        {lobby && <div className="lobby-panel"><p className="eyebrow">DEMO LOBBY · {lobby.players.length}/{lobby.maxPlayers}</p>{lobby.players.map(player => <p key={player.id}>{player.name}{player.id === lobby.hostPlayerId ? ' · HOST' : ''}</p>)}<small>{lobby.players.length < lobby.minPlayers ? 'Waiting for at least 2 players…' : 'Ready to start'}</small>{lobby.hostPlayerId === playerId && <button type="button" className="primary-button" disabled={busy || lobby.players.length < lobby.minPlayers} onClick={startGame}>Start multiplayer game <span>↗</span></button>}<button type="button" className="subtle-button" disabled={busy} onClick={leaveLobby}>Leave lobby</button></div>}
         {mode === 'friends' && !lobby && !friendsRole && <div className="mode-options"><p className="eyebrow">FRIENDS GAME</p><button type="button" className="primary-button" onClick={() => setFriendsRole('host')}>Host a lobby</button><button type="button" className="subtle-button" onClick={() => setFriendsRole('join')}>Join a lobby</button></div>}
         {mode && !lobby && (mode === 'bot' || friendsRole) && <><label htmlFor="player-name">YOUR NAME</label><input id="player-name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" maxLength="24" /></>}
         {mode && !lobby && (mode === 'bot' || friendsRole) && <>{(mode === 'bot' || friendsRole === 'host') && <><label htmlFor="opponents">OPPONENTS</label><select id="opponents" value={opponents} onChange={e => setOpponents(Number(e.target.value))}><option value="1">1 opponent</option><option value="2">2 opponents</option><option value="3">3 opponents</option></select></>}

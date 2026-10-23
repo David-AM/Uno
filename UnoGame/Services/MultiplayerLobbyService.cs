@@ -18,6 +18,7 @@ public interface IMultiplayerLobbyService
     (GameViewDto? Result, string? Error) CatchUno(int playerId, int targetPlayerId);
     (GameViewDto? Result, string? Error) ChallengeDrawFour(int playerId);
     (GameViewDto? Result, string? Error) ChooseOpeningColor(int playerId, CardColor color);
+    (bool Result, string? Error) LeaveLobby(int playerId);
     bool RegisterConnection(int playerId, string reconnectToken, string connectionId, out string error);
     bool IsReconnectTokenValid(int playerId, string reconnectToken);
     bool IsConnectionAuthorized(int playerId, string connectionId);
@@ -69,17 +70,46 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
     {
         lock (_gate)
         {
-            if (_game is not null) return (null, "The game has already started.");
+            var normalizedName = playerName.Trim();
+            if (_game is not null)
+            {
+                var returningPlayer = _players.FirstOrDefault(player =>
+                    string.Equals(player.Name, normalizedName, StringComparison.OrdinalIgnoreCase));
+                if (returningPlayer is null)
+                    return (null, "The game has already started. Only an existing player can rejoin.");
+
+                var connectionState = _connectionStates[returningPlayer.Id];
+                if (connectionState.IsForfeited)
+                    return (null, "You missed the 60-second reconnection window. You have forfeited this match.");
+
+                return (new JoinLobbyResponse(
+                    returningPlayer.Id,
+                    _players[0].Id == returningPlayer.Id,
+                    Lobby(),
+                    View(returningPlayer.Id, consumeEvents: false),
+                    connectionState.ReconnectToken), null);
+            }
             if (_players.Count == 0 && !hostLobby) return (null, "There is no lobby available to join.");
             if (_players.Count > 0 && hostLobby) return (null, "A lobby already exists. Join it or wait for it to close.");
             if (_players.Count == 0) _maxPlayers = Math.Clamp(opponentCount, 1, MaxOpponents) + 1;
             if (_players.Count >= _maxPlayers) return (null, "The lobby is full.");
-            var player = new Player(_nextPlayerId++, playerName.Trim());
+            var player = new Player(_nextPlayerId++, normalizedName);
             _players.Add(player);
             _recentEvents[player.Id] = [];
             var reconnectToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
             _connectionStates[player.Id] = new ConnectionState(reconnectToken);
             return (new JoinLobbyResponse(player.Id, _players.Count == 1, Lobby(), null, reconnectToken), null);
+        }
+    }
+
+    public (bool Result, string? Error) LeaveLobby(int playerId)
+    {
+        lock (_gate)
+        {
+            if (_game is not null) return (false, "The game has already started.");
+            if (Find(playerId) is null) return (false, "You are not in the lobby.");
+            RemovePlayerLocked(playerId);
+            return (true, null);
         }
     }
 
@@ -98,11 +128,9 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
                 error = "You missed the 60-second reconnection window. You have forfeited this match.";
                 return false;
             }
-            if (_game?.IsGameOver == true)
-            {
-                error = "This match has ended.";
-                return false;
-            }
+            // Keep the reconnect token valid after a round or match ends so a
+            // refreshed client can still return to the result screen. A player
+            // who missed the reconnect grace period is still rejected above.
             state.ConnectionId = connectionId;
             state.DisconnectedAtUtc = null;
             state.DeadlineUtc = null;
@@ -124,8 +152,14 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
     {
         lock (_gate)
         {
-            var state = _connectionStates.Values.FirstOrDefault(candidate => candidate.ConnectionId == connectionId);
-            if (state is null) return false;
+            var connection = _connectionStates.FirstOrDefault(pair => pair.Value.ConnectionId == connectionId);
+            if (connection.Value is null) return false;
+            var state = connection.Value;
+            if (_game is null)
+            {
+                RemovePlayerLocked(connection.Key);
+                return true;
+            }
             state.ConnectionId = null;
             if (_game is not null && !_game.IsGameOver)
             {
@@ -323,16 +357,21 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
             // active GameController still owns their hand and turn order.
             if (_game is not null) return;
 
-            var player = _players.FirstOrDefault(p => p.Id == playerId);
-            if (player is null) return;
-            _players.Remove(player);
-            _recentEvents.Remove(playerId);
-            _connectionStates.Remove(playerId);
-            if (_players.Count == 0)
-            {
-                _nextPlayerId = 1;
-                _maxPlayers = MaxOpponents + 1;
-            }
+            RemovePlayerLocked(playerId);
+        }
+    }
+
+    private void RemovePlayerLocked(int playerId)
+    {
+        var player = _players.FirstOrDefault(p => p.Id == playerId);
+        if (player is null) return;
+        _players.Remove(player);
+        _recentEvents.Remove(playerId);
+        _connectionStates.Remove(playerId);
+        if (_players.Count == 0)
+        {
+            _nextPlayerId = 1;
+            _maxPlayers = MaxOpponents + 1;
         }
     }
 
