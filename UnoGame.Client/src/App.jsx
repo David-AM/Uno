@@ -58,6 +58,7 @@ function App() {
     connection?.stop();
     sessionStorage.removeItem('uno.playerId');
     sessionStorage.removeItem('uno.reconnectToken');
+    localStorage.removeItem('uno.playerName');
     setConnection(null); setPlayerId(null); setLobby(null); setGame(null);
     setMode(null); setFriendsRole(null); setTerminalMessage(''); setConnectionStatus('offline'); setError('');
   };
@@ -92,6 +93,7 @@ function App() {
     setPlayerId(joined.playerId); setLobby(joined.lobby);
     sessionStorage.setItem('uno.playerId', String(joined.playerId));
     sessionStorage.setItem('uno.reconnectToken', joined.reconnectToken);
+    localStorage.setItem('uno.playerName', name.trim());
     const hub = new HubConnectionBuilder().withUrl(HUB).withAutomaticReconnect([0, 2000, 10000, 30000]).configureLogging(LogLevel.Warning).build();
     hub.on('lobbyUpdated', setLobby);
     hub.on('gameUpdated', state => { if (state) setGame(state); });
@@ -205,6 +207,47 @@ function App() {
       }
     })();
     return () => { cancelled = true; hub.stop(); };
+  }, []);
+
+  // A closed tab loses sessionStorage. Recover the player by name when the
+  // server still has an active game, then receive a fresh session token.
+  useEffect(() => {
+    const savedName = localStorage.getItem('uno.playerName')?.trim();
+    if (!savedName || sessionStorage.getItem('uno.playerId') || sessionStorage.getItem('uno.reconnectToken') || connection || game) return undefined;
+    let cancelled = false;
+    let hub;
+    (async () => {
+      try {
+        const lobbyState = await request('/lobby');
+        if (!lobbyState.isPlaying || cancelled) return;
+        const joined = await request('/lobby/join', 'POST', {
+          playerName: savedName,
+          opponentCount: 1,
+          hostLobby: false,
+        });
+        if (cancelled) return;
+        sessionStorage.setItem('uno.playerId', String(joined.playerId));
+        sessionStorage.setItem('uno.reconnectToken', joined.reconnectToken);
+        setName(savedName); setLobby(joined.lobby); setMode('friends'); setFriendsRole(joined.isHost ? 'host' : 'join'); setRejoiningGame(true);
+        hub = new HubConnectionBuilder().withUrl(HUB).withAutomaticReconnect([0, 2000, 10000, 30000]).configureLogging(LogLevel.Warning).build();
+        hub.on('lobbyUpdated', setLobby);
+        hub.on('gameUpdated', state => { if (state) { setGame(state); setRejoiningGame(false); } });
+        hub.on('actionError', setError);
+        let terminal = false;
+        hub.onreconnecting(() => { if (!terminal) setConnectionStatus('reconnecting'); });
+        hub.onreconnected(async () => {
+          try { const state = await hub.invoke('Register', joined.playerId, joined.reconnectToken); if (state) setGame(state); setConnectionStatus('connected'); }
+          catch (e) { const terminalState = terminalConnectionError(e.message); if (terminalState) { terminal = true; setTerminalMessage(terminalState.message); hub.stop(); } else setError(e.message); }
+        });
+        hub.onclose(() => { if (!terminal) setConnectionStatus('disconnected'); });
+        await hub.start();
+        const state = await hub.invoke('Register', joined.playerId, joined.reconnectToken);
+        if (!cancelled) { setPlayerId(joined.playerId); setConnection(hub); setConnectionStatus('connected'); if (state || joined.game) setGame(state || joined.game); setRejoiningGame(false); }
+      } catch (e) {
+        if (!cancelled) { setRejoiningGame(false); setError(e.message); hub?.stop(); }
+      }
+    })();
+    return () => { cancelled = true; hub?.stop(); };
   }, []);
 
   useEffect(() => {
