@@ -7,6 +7,18 @@ namespace UnoGame.Tests;
 public sealed class MultiplayerPresenceTests
 {
     [Fact]
+    public void LobbyRejectsDuplicatePlayerNamesBeforeGameStarts()
+    {
+        var service = new MultiplayerLobbyService(TimeSpan.FromSeconds(60));
+        Assert.NotNull(service.Join("Ada", 1, true).Result);
+
+        var duplicate = service.Join(" ada ", 1, false);
+
+        Assert.Null(duplicate.Result);
+        Assert.Equal("That name is already in the player list. Choose another name.", duplicate.Error);
+    }
+
+    [Fact]
     public void DisconnectingCurrentPlayerPausesMatchAndBlocksActions()
     {
         var now = DateTime.UtcNow;
@@ -80,8 +92,9 @@ public sealed class MultiplayerPresenceTests
         Assert.True(service.ProcessExpiredDisconnections());
         Assert.False(service.ProcessExpiredDisconnections());
         var view = service.GetGame(host.PlayerId)!;
-        Assert.Equal("round-complete", view.Status);
+        Assert.Equal("completed", view.Status);
         Assert.Equal(host.Name, view.Winner);
+        Assert.Contains(view.Players, player => player.Id == member.PlayerId && player.IsForfeited);
         Assert.False(service.RegisterConnection(member.PlayerId, member.Token, "late-connection", out _));
     }
 
@@ -110,21 +123,35 @@ public sealed class MultiplayerPresenceTests
         Assert.True(service.GetGame(host.PlayerId)!.IsPaused);
         now = now.AddSeconds(61);
         Assert.True(service.ProcessExpiredDisconnections());
-        var roundComplete = service.GetGame(host.PlayerId)!;
-        Assert.Equal("round-complete", roundComplete.Status);
-        Assert.Equal(2, roundComplete.Players.Count);
-        Assert.Equal(1, roundComplete.RoundNumber);
+        var ongoingMatch = service.GetGame(host.PlayerId)!;
+        Assert.Equal("playing", ongoingMatch.Status);
+        Assert.Equal(4, ongoingMatch.Players.Count);
+        Assert.Equal(1, ongoingMatch.RoundNumber);
         Assert.Equal("Lin", third.Name);
-        Assert.True(roundComplete.Players.All(player => player.Score > 0));
-        Assert.Equal(roundComplete.Players[0].Score, roundComplete.Players[1].Score);
+        Assert.Contains(ongoingMatch.Players, player => player.Name == "Grace" && player.IsForfeited);
+        Assert.Contains(ongoingMatch.Players, player => player.Name == "Lin" && player.IsForfeited);
+        Assert.Equal(0, ongoingMatch.Players.Single(player => player.Name == "Host").Score);
         Assert.Equal(host.PlayerId, service.GetLobby().HostPlayerId);
-        var nextRound = service.Restart(host.PlayerId)!;
-        Assert.Equal("playing", nextRound.Status);
-        Assert.Equal(2, nextRound.RoundNumber);
     }
 
     [Fact]
-    public void RemainingPlayerBecomesHostWhenOriginalHostForfeits()
+    public void RemainingPlayerWinsWhenOriginalHostForfeitsInTwoPlayerMatch()
+    {
+        var now = DateTime.UtcNow;
+        var (service, host, member) = StartMatch(() => now);
+        Assert.True(service.DisconnectConnection(host.ConnectionId));
+
+        now = now.AddSeconds(61);
+        Assert.True(service.ProcessExpiredDisconnections());
+
+        var view = service.GetGame(member.PlayerId)!;
+        Assert.Equal("completed", view.Status);
+        Assert.Equal(member.Name, view.Winner);
+        Assert.Equal(member.PlayerId, service.GetLobby().HostPlayerId);
+    }
+
+    [Fact]
+    public void RemainingEligiblePlayerCanStartNextRoundAfterHostForfeits()
     {
         var now = DateTime.UtcNow;
         var (service, host, member) = StartMatch(() => now, includeThirdPlayer: true);
@@ -132,7 +159,6 @@ public sealed class MultiplayerPresenceTests
 
         now = now.AddSeconds(61);
         Assert.True(service.ProcessExpiredDisconnections());
-
         Assert.Equal(member.PlayerId, service.GetLobby().HostPlayerId);
         Assert.NotNull(service.Restart(member.PlayerId));
     }

@@ -38,6 +38,18 @@ public sealed class MultiplayerHub(IMultiplayerLobbyService lobby) : Hub
         if (result.Error is not null) await Clients.Caller.SendAsync("actionError", result.Error);
         await Broadcast();
     }
+    public async Task ReturnToLobby(int playerId)
+    {
+        if (!lobby.IsConnectionAuthorized(playerId, Context.ConnectionId))
+        {
+            await Clients.Caller.SendAsync("actionError", "You are not connected to this game.");
+            return;
+        }
+        var result = lobby.ReturnToLobby(playerId);
+        if (result.Error is not null) await Clients.Caller.SendAsync("actionError", result.Error);
+        await Broadcast();
+        if (result.Result) await Clients.Group(Group).SendAsync("gameUpdated", (GameViewDto?)null);
+    }
     public async Task Restart(int playerId, bool resetScores = false)
     {
         if (!lobby.IsConnectionAuthorized(playerId, Context.ConnectionId)) await Clients.Caller.SendAsync("actionError", "You are disconnected from the match.");

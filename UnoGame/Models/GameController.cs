@@ -6,6 +6,7 @@ public sealed class GameController
     private readonly Dictionary<Player, List<Card>> _cardInHands;
     private readonly Dictionary<Player, int> _playerScores;
     private readonly Dictionary<Player, bool> _hasSaidUno;
+    private readonly HashSet<Player> _forfeitedPlayers = [];
     private int _currentPlayerIndex;
     private TurnDirection _direction = TurnDirection.Clockwise;
     private int _nextDrawPenalty;
@@ -15,6 +16,7 @@ public sealed class GameController
     private bool _skipNext;
     private bool _hasDrawnThisTurn;
     private Card? _drawnCardThisTurn;
+    private bool _matchEnded;
     private int _nextCardId;
     private readonly Table _table;
     private readonly Random _random;
@@ -33,7 +35,7 @@ public sealed class GameController
     public Table Table => _table;
     public Player? Winner { get; private set; }
     public bool IsGameOver => Winner is not null;
-    public bool IsMatchOver => _players.Any(player => _playerScores[player] >= WinningScore);
+    public bool IsMatchOver => _matchEnded || _players.Where(IsEligible).Any(player => _playerScores[player] >= WinningScore);
     public int CurrentPlayerIndex => _currentPlayerIndex;
     public TurnDirection Direction => _direction;
     public bool HasDrawnThisTurn => _hasDrawnThisTurn;
@@ -41,13 +43,14 @@ public sealed class GameController
     public bool RequiresOpeningColorChoice => _openingColorPending && ReferenceEquals(GetCurrentPlayer(), _players[_currentPlayerIndex]);
     public bool CanChallengeDrawFour(Player player) => _nextDrawPenalty == 4 && _drawFourPlayer is not null && ReferenceEquals(GetCurrentPlayer(), player);
 
-    public GameController(List<Player> players, Random? random = null, IReadOnlyDictionary<Player, int>? previousScores = null)
+    public GameController(List<Player> players, Random? random = null, IReadOnlyDictionary<Player, int>? previousScores = null, IReadOnlyCollection<Player>? forfeitedPlayers = null)
     {
         if (players.Count < 2 || players.Count > 10) throw new ArgumentException("A game needs 2 to 10 players.");
         _players = players;
         _cardInHands = players.ToDictionary(p => p, _ => new List<Card>());
         _playerScores = players.ToDictionary(p => p, p => previousScores is not null && previousScores.TryGetValue(p, out var score) ? score : 0);
         _hasSaidUno = players.ToDictionary(p => p, _ => false);
+        if (forfeitedPlayers is not null) _forfeitedPlayers.UnionWith(forfeitedPlayers);
         _random = random ?? Random.Shared;
         _table = new Table(new Deck(), new DiscardPile());
     }
@@ -58,9 +61,9 @@ public sealed class GameController
         _table.DrawPile.Cards.Clear(); _table.DiscardPile.Cards.Clear();
         foreach (var hand in _cardInHands.Values) hand.Clear();
         foreach (var player in _hasSaidUno.Keys) _hasSaidUno[player] = false;
-        _currentPlayerIndex = 0; _direction = TurnDirection.Clockwise; _nextDrawPenalty = 0; _drawFourPlayer = null; _drawFourActiveColor = default; _openingColorPending = false; _skipNext = false; _hasDrawnThisTurn = false; _drawnCardThisTurn = null; Winner = null;
+        _currentPlayerIndex = _players.FindIndex(IsEligible); _direction = TurnDirection.Clockwise; _nextDrawPenalty = 0; _drawFourPlayer = null; _drawFourActiveColor = default; _openingColorPending = false; _skipNext = false; _hasDrawnThisTurn = false; _drawnCardThisTurn = null; _matchEnded = false; Winner = null;
         InitializeStandardDeck(); ShuffleDeck();
-        foreach (var player in _players) for (var i = 0; i < 7; i++) DrawCardFromDeckOnly(player);
+        foreach (var player in _players.Where(IsEligible)) for (var i = 0; i < 7; i++) DrawCardFromDeckOnly(player);
         var first = DrawCardFromDeckOnly();
         // Wild Draw Four cannot be the opening discard. A regular Wild stays
         // visible and lets the first player choose the active color.
@@ -138,7 +141,7 @@ public sealed class GameController
                 ReverseTurnDirection();
                 // In a two-player game, Reverse has the same effect as Skip:
                 // the other player is skipped and the current player plays again.
-                if (_players.Count == 2) _skipNext = true;
+                if (EligiblePlayerCount == 2) _skipNext = true;
                 break;
             case ActionType.Skip: _skipNext = true; break;
             case ActionType.DrawTwo: _nextDrawPenalty += 2; break;
@@ -212,20 +215,33 @@ public sealed class GameController
     }
     public Player? CheckGameWinner()
     {
-        var winner = _players.FirstOrDefault(p => _cardInHands[p].Count == 0);
-        if (winner is not null) { Winner = winner; var score = _players.Where(p => p != winner).Sum(p => _cardInHands[p].Sum(c => c.ScoreValue)); _playerScores[winner] += score; OnRoundEnded?.Invoke(winner, score); if (_playerScores[winner] >= WinningScore) OnGameEnded?.Invoke(winner); }
+        var winner = _players.FirstOrDefault(p => IsEligible(p) && _cardInHands[p].Count == 0);
+        if (winner is not null) { Winner = winner; var score = _players.Where(p => IsEligible(p) && p != winner).Sum(p => _cardInHands[p].Sum(c => c.ScoreValue)); _playerScores[winner] += score; OnRoundEnded?.Invoke(winner, score); if (_playerScores[winner] >= WinningScore) { _matchEnded = true; OnGameEnded?.Invoke(winner); } }
         return winner;
     }
-    public bool EndByForfeit(IReadOnlyCollection<Player> remainingPlayers)
+
+    public bool ForfeitPlayer(Player player)
     {
-        if (Winner is not null || remainingPlayers.Count == 0 || remainingPlayers.Any(player => !_players.Contains(player))) return false;
-        Winner = remainingPlayers.First();
-        var score = _players.Where(player => !remainingPlayers.Contains(player))
-            .Sum(player => _cardInHands[player].Sum(card => card.ScoreValue));
-        foreach (var player in remainingPlayers)
-            _playerScores[player] += score;
-        OnRoundEnded?.Invoke(Winner, score);
-        OnGameEnded?.Invoke(Winner);
+        if (Winner is not null || !_players.Contains(player) || !_forfeitedPlayers.Add(player)) return false;
+        if (ReferenceEquals(GetCurrentPlayer(), player))
+        {
+            _nextDrawPenalty = 0;
+            _drawFourPlayer = null;
+            _skipNext = false;
+            _hasDrawnThisTurn = false;
+            _drawnCardThisTurn = null;
+            MoveToNextEligible(1);
+        }
+        if (EligiblePlayerCount == 1)
+        {
+            Winner = _players.First(IsEligible);
+            _matchEnded = true;
+            OnGameEnded?.Invoke(Winner);
+        }
+        else if (EligiblePlayerCount > 1)
+        {
+            OnTurnChanged?.Invoke(GetCurrentPlayer());
+        }
         return true;
     }
     public void NextTurn()
@@ -233,7 +249,7 @@ public sealed class GameController
         var steps = _skipNext ? 2 : 1; _skipNext = false;
         _hasDrawnThisTurn = false;
         _drawnCardThisTurn = null;
-        _currentPlayerIndex = (_currentPlayerIndex + (int)_direction * steps + _players.Count) % _players.Count;
+        MoveToNextEligible(steps);
         if (_nextDrawPenalty > 0 && _drawFourPlayer is null)
         {
             var target = GetCurrentPlayer();
@@ -242,7 +258,7 @@ public sealed class GameController
             for (var i = 0; i < count; i++) if (DrawCardFromDeckOnly(target) is { } card) OnCardDrawn?.Invoke(target, card);
             OnCardsDrawn?.Invoke(target, count);
             OnPenaltyCardsDrawn?.Invoke(target, count);
-            _currentPlayerIndex = (_currentPlayerIndex + (int)_direction + _players.Count) % _players.Count;
+            MoveToNextEligible(1);
         }
         OnTurnChanged?.Invoke(GetCurrentPlayer());
     }
@@ -264,12 +280,32 @@ public sealed class GameController
     public void ReshuffleDiscardIntoDraw() { if (_table.DiscardPile.Cards.Count <= 1) return; var top = _table.DiscardPile.Cards[^1]; _table.DrawPile.Cards.AddRange(_table.DiscardPile.Cards.Take(_table.DiscardPile.Cards.Count - 1)); _table.DiscardPile.Cards.Clear(); _table.DiscardPile.Cards.Add(top); ShuffleDeck(); }
     public Player GetCurrentPlayer() => _players[_currentPlayerIndex];
     public CardColor GetActiveColor() => _table.ActiveColor;
-    public Player GetNextPlayer() => _players[(_currentPlayerIndex + (int)_direction + _players.Count) % _players.Count];
+    public Player GetNextPlayer()
+    {
+        var index = FindNextEligibleIndex(_currentPlayerIndex);
+        return _players[index];
+    }
     public Card? GetTopCard() => _table.DiscardPile.Cards.LastOrDefault();
-    public int CalculateRoundScore(Player winner) => _players.Where(p => p != winner).Sum(p => _cardInHands[p].Sum(c => c.ScoreValue));
+    public int CalculateRoundScore(Player winner) => _players.Where(p => IsEligible(p) && p != winner).Sum(p => _cardInHands[p].Sum(c => c.ScoreValue));
     public int GetPlayerScore(Player player) => _playerScores[player];
     public IReadOnlyDictionary<Player, int> GetPlayerScores() => _playerScores;
+    public IReadOnlyCollection<Player> ForfeitedPlayers => _forfeitedPlayers;
+    public bool IsEligible(Player player) => _players.Contains(player) && !_forfeitedPlayers.Contains(player);
+    public int EligiblePlayerCount => _players.Count(IsEligible);
     private static bool HasPlayableNonWildCard(IEnumerable<Card> hand, Card top, CardColor activeColor) => hand.Any(card => card.Color != CardColor.Wild &&
         (card.Color == activeColor || (card.Value is not null && card.Value == top.Value) || (card.Action is not null && card.Action == top.Action)));
+    private void MoveToNextEligible(int turns)
+    {
+        for (var turn = 0; turn < turns; turn++) _currentPlayerIndex = FindNextEligibleIndex(_currentPlayerIndex);
+    }
+    private int FindNextEligibleIndex(int currentIndex)
+    {
+        var index = currentIndex;
+        do
+        {
+            index = (index + (int)_direction + _players.Count) % _players.Count;
+        } while (!IsEligible(_players[index]));
+        return index;
+    }
     private void ApplyOpeningCard(Card card) { if (card.Action == ActionType.Reverse) ReverseTurnDirection(); else if (card.Action == ActionType.Skip) NextTurn(); else if (card.Action == ActionType.DrawTwo) { ForceDrawCards(GetCurrentPlayer(), 2); NextTurn(); } }
 }

@@ -19,6 +19,7 @@ public interface IMultiplayerLobbyService
     (GameViewDto? Result, string? Error) ChallengeDrawFour(int playerId);
     (GameViewDto? Result, string? Error) ChooseOpeningColor(int playerId, CardColor color);
     (bool Result, string? Error) LeaveLobby(int playerId);
+    (bool Result, string? Error) ReturnToLobby(int playerId);
     bool RegisterConnection(int playerId, string reconnectToken, string connectionId, out string error);
     bool IsReconnectTokenValid(int playerId, string reconnectToken);
     bool IsConnectionAuthorized(int playerId, string connectionId);
@@ -38,6 +39,7 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
     private readonly Dictionary<int, List<GameEventDto>> _recentEvents = [];
     private readonly Dictionary<int, ConnectionState> _connectionStates = [];
     private GameController? _game;
+    private int? _hostPlayerId;
     private int _nextPlayerId = 1;
     private int _maxPlayers = MaxOpponents + 1;
     private int _roundNumber = 1;
@@ -84,17 +86,20 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
 
                 return (new JoinLobbyResponse(
                     returningPlayer.Id,
-                    _players[0].Id == returningPlayer.Id,
+                    _hostPlayerId == returningPlayer.Id,
                     Lobby(),
                     View(returningPlayer.Id, consumeEvents: false),
                     connectionState.ReconnectToken), null);
             }
+            if (_players.Any(player => string.Equals(player.Name, normalizedName, StringComparison.OrdinalIgnoreCase)))
+                return (null, "That name is already in the player list. Choose another name.");
             if (_players.Count == 0 && !hostLobby) return (null, "There is no lobby available to join.");
             if (_players.Count > 0 && hostLobby) return (null, "A lobby already exists. Join it or wait for it to close.");
             if (_players.Count == 0) _maxPlayers = Math.Clamp(opponentCount, 1, MaxOpponents) + 1;
             if (_players.Count >= _maxPlayers) return (null, "The lobby is full.");
             var player = new Player(_nextPlayerId++, normalizedName);
             _players.Add(player);
+            _hostPlayerId ??= player.Id;
             _recentEvents[player.Id] = [];
             var reconnectToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
             _connectionStates[player.Id] = new ConnectionState(reconnectToken);
@@ -109,6 +114,25 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
             if (_game is not null) return (false, "The game has already started.");
             if (Find(playerId) is null) return (false, "You are not in the lobby.");
             RemovePlayerLocked(playerId);
+            return (true, null);
+        }
+    }
+
+    public (bool Result, string? Error) ReturnToLobby(int playerId)
+    {
+        lock (_gate)
+        {
+            if (_game is null || !_game.IsMatchOver) return (false, "The game has not ended.");
+            if (Find(playerId) is null) return (false, "You are not in the game.");
+
+            _game = null;
+            _players.Clear();
+            _hostPlayerId = null;
+            _recentEvents.Clear();
+            _connectionStates.Clear();
+            _nextPlayerId = 1;
+            _maxPlayers = MaxOpponents + 1;
+            _roundNumber = 1;
             return (true, null);
         }
     }
@@ -182,25 +206,26 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
             if (expiredIds.Count == 0) return false;
 
             var expiredPlayers = _players.Where(player => expiredIds.Contains(player.Id)).ToArray();
-            foreach (var player in expiredPlayers) _connectionStates[player.Id].IsForfeited = true;
-            var remainingPlayers = _players.Where(player => !expiredIds.Contains(player.Id)).ToList();
-            if (remainingPlayers.Count > 0)
-                _game.EndByForfeit(remainingPlayers);
-
+            // Remove stale events before processing forfeitures. ForfeitPlayer
+            // will then enqueue the immediate turn-change event for the next
+            // eligible player.
+            foreach (var events in _recentEvents.Values) events.Clear();
             foreach (var player in expiredPlayers)
             {
-                _players.Remove(player);
-                _recentEvents.Remove(player.Id);
-                _connectionStates.Remove(player.Id);
+                _connectionStates[player.Id].IsForfeited = true;
+                _game.ForfeitPlayer(player);
             }
 
-            // The first remaining player becomes the new host. Restart() will
-            // use this ordering when the host starts the next round.
-            _players.Clear();
-            _players.AddRange(remainingPlayers);
-            foreach (var events in _recentEvents.Values) events.Clear();
-            QueueEvent(new GameEventDto("alert", null, null, null,
-                $"{string.Join(", ", expiredPlayers.Select(player => player.Name))} forfeited. Their card scores were awarded to the remaining players. The host can start the next round."));
+            if (expiredPlayers.Any(player => player.Id == _hostPlayerId))
+                _hostPlayerId = _players.FirstOrDefault(_game.IsEligible)?.Id;
+
+            // Keep forfeited players in the lobby/game state so the remaining
+            // hands, scores, and player ordering are not rebuilt or reset.
+            foreach (var player in expiredPlayers)
+            {
+                QueueEvent(new GameEventDto("forfeit", player.Id, player.Name, null,
+                    $"{player.Name} forfeited and will no longer take turns."));
+            }
             return true;
         }
     }
@@ -222,7 +247,7 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
         lock (_gate)
         {
             if (_players.Count < 2) return (null, "At least 2 players are required to start.");
-            if (_players[0].Id != playerId) return (null, "Only the host can start the game.");
+            if (_hostPlayerId != playerId) return (null, "Only the host can start the game.");
             if (_game is not null) return (null, "The game has already started.");
             _game = new GameController(_players);
             _roundNumber = 1;
@@ -331,12 +356,13 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
     {
         lock (_gate)
         {
-            if (_game is null || _players.Count == 0 || _players[0].Id != playerId) return null;
+            if (_game is null || _players.Count == 0 || _hostPlayerId != playerId) return null;
+            if (_game.IsMatchOver) return null;
             var newMatch = resetScores || _game.IsMatchOver;
             var previousScores = newMatch ? null : _game.GetPlayerScores();
             _roundNumber = newMatch ? 1 : _roundNumber + 1;
             foreach (var events in _recentEvents.Values) events.Clear();
-            _game = new GameController(_players, previousScores: previousScores);
+            _game = new GameController(_players, previousScores: previousScores, forfeitedPlayers: _game.ForfeitedPlayers);
             WatchGameEvents(_game);
             _game.StartGame();
             foreach (var state in _connectionStates.Values.Where(state => !state.IsConnected && !state.IsForfeited))
@@ -368,8 +394,11 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
         _players.Remove(player);
         _recentEvents.Remove(playerId);
         _connectionStates.Remove(playerId);
+        if (_hostPlayerId == playerId)
+            _hostPlayerId = _players.FirstOrDefault()?.Id;
         if (_players.Count == 0)
         {
+            _hostPlayerId = null;
             _nextPlayerId = 1;
             _maxPlayers = MaxOpponents + 1;
         }
@@ -388,7 +417,7 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
 
     private Player? Find(int id) => _players.FirstOrDefault(p => p.Id == id);
     private LobbyResponse Lobby() => new(LobbyId, _game is not null, 2, _maxPlayers,
-        _players.FirstOrDefault()?.Id, _players.Select(p =>
+        _hostPlayerId, _players.Select(p =>
         {
             var state = _connectionStates[p.Id];
             var seconds = !state.IsConnected && state.DeadlineUtc is { } deadline

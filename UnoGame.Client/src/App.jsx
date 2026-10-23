@@ -53,7 +53,11 @@ function App() {
     : /match has ended|no longer available/i.test(message || '')
       ? { status: 'match-ended', message: 'This match has ended.' }
       : null;
-  const returnToLobby = () => {
+  const returnToLobby = async () => {
+    if (connection && playerId && game?.status === 'completed') {
+      try { await connection.invoke('ReturnToLobby', playerId); }
+      catch (e) { setError(e.message); return; }
+    }
     connection?.stop();
     sessionStorage.removeItem('uno.playerId');
     sessionStorage.removeItem('uno.reconnectToken');
@@ -81,6 +85,10 @@ function App() {
   const createGame = () => act(async () => {
     if (!name.trim()) throw new Error('Enter your name before starting or hosting a game.');
     setTerminalMessage('');
+    const lobbyState = await request('/lobby');
+    const normalizedName = name.trim().toLowerCase();
+    const duplicateName = lobbyState.players.some(player => player.name.trim().toLowerCase() === normalizedName);
+    if (!lobbyState.isPlaying && duplicateName) throw new Error('That name is already in the player list. Choose another name.');
     const joined = await request('/lobby/join', 'POST', {
       playerName: name.trim() || 'You',
       opponentCount: opponents,
@@ -92,7 +100,7 @@ function App() {
     localStorage.setItem('uno.playerName', name.trim());
     const hub = new HubConnectionBuilder().withUrl(HUB).withAutomaticReconnect([0, 2000, 10000, 30000]).configureLogging(LogLevel.Warning).build();
     hub.on('lobbyUpdated', setLobby);
-    hub.on('gameUpdated', state => { if (state) setGame(state); });
+    hub.on('gameUpdated', state => { if (state) setGame(state); else setGame(null); });
     hub.on('actionError', setError);
     let terminal = false;
     hub.onreconnecting(() => { if (!terminal) setConnectionStatus('reconnecting'); });
@@ -214,7 +222,7 @@ function App() {
         setName(savedName); setLobby(joined.lobby); setFriendsRole(joined.isHost ? 'host' : 'join'); setRejoiningGame(true);
         hub = new HubConnectionBuilder().withUrl(HUB).withAutomaticReconnect([0, 2000, 10000, 30000]).configureLogging(LogLevel.Warning).build();
         hub.on('lobbyUpdated', setLobby);
-        hub.on('gameUpdated', state => { if (state) { setGame(state); setRejoiningGame(false); } });
+        hub.on('gameUpdated', state => { if (state) { setGame(state); setRejoiningGame(false); } else { setGame(null); setRejoiningGame(false); } });
         hub.on('actionError', setError);
         let terminal = false;
         hub.onreconnecting(() => { if (!terminal) setConnectionStatus('reconnecting'); });
@@ -235,12 +243,16 @@ function App() {
 
   useEffect(() => {
     if (!game?.recentEvents?.length) return;
-    setAnimationQueue(queue => [...queue, ...game.recentEvents.map((event, index) => ({ ...event, animationId: `${Date.now()}-${index}-${Math.random()}` }))]);
+    const events = game.recentEvents.map((event, index) => ({ ...event, animationId: `${Date.now()}-${index}-${Math.random()}` }));
+    const forfeitureEvents = events.filter(event => event.type === 'forfeit');
+    const regularEvents = events.filter(event => event.type !== 'forfeit');
+    setAnimationQueue(queue => [...forfeitureEvents, ...queue, ...regularEvents]);
   }, [game?.recentEvents]);
 
   useEffect(() => {
-    if (game?.status !== 'playing') Swal.close();
-  }, [game?.status]);
+    const hasForfeitAlert = game?.recentEvents?.some(event => event.type === 'forfeit');
+    if (game?.status !== 'playing' && !hasForfeitAlert) Swal.close();
+  }, [game?.status, game?.recentEvents]);
 
   useEffect(() => {
     // Multiplayer updates do not include animation events, so synchronize the
@@ -273,9 +285,9 @@ function App() {
       }, 800);
       return () => window.clearTimeout(timer);
     }
-    if (currentEvent.type === 'alert') {
+    if (currentEvent.type === 'alert' || currentEvent.type === 'forfeit') {
       setActivePlay(null);
-      if (game.status !== 'playing') {
+      if (game.status !== 'playing' && currentEvent.type !== 'forfeit') {
         if (currentEvent.hand) setDisplayedHand(currentEvent.hand);
         setAnimationQueue(queue => queue.slice(1));
         return undefined;
@@ -284,7 +296,7 @@ function App() {
       Swal.fire({
         toast: true,
         position: 'top',
-        icon: 'warning',
+        icon: currentEvent.type === 'forfeit' ? 'error' : 'warning',
         title: currentEvent.message,
         showConfirmButton: false,
         timer: 1400,
@@ -343,16 +355,17 @@ function App() {
     </section>
   </main>;
 
-  const human = game.players.find(p => p.isHuman);
-  const humanIndex = game.players.findIndex(player => player.isHuman);
+  const eligiblePlayers = game.players.filter(player => !player.isForfeited);
+  const human = eligiblePlayers.find(p => p.isHuman) || game.players.find(p => p.isHuman);
+  const humanIndex = eligiblePlayers.findIndex(player => player.isHuman);
   const opponentsList = humanIndex >= 0
-    ? [...game.players.slice(humanIndex + 1), ...game.players.slice(0, humanIndex)]
+    ? [...eligiblePlayers.slice(humanIndex + 1), ...eligiblePlayers.slice(0, humanIndex)]
     : [];
   const canDraw = isYourTurn && !game.canChallengeDrawFour && !matchPaused;
   const directionStep = game.direction === 'Clockwise' ? 1 : -1;
-  const currentPlayerIndex = game.players.findIndex(player => player.isCurrentPlayer);
-  const nextPlayer = currentPlayerIndex >= 0
-    ? game.players[(currentPlayerIndex + directionStep + game.players.length) % game.players.length]
+  const currentPlayerIndex = eligiblePlayers.findIndex(player => player.isCurrentPlayer);
+  const nextPlayer = currentPlayerIndex >= 0 && eligiblePlayers.length > 1
+    ? eligiblePlayers[(currentPlayerIndex + directionStep + eligiblePlayers.length) % eligiblePlayers.length]
     : null;
   // Seat 0 is always the local player. Other seats are positioned relative to
   // the viewer, so do not use the shared player-list index here.
@@ -386,7 +399,7 @@ function App() {
     {activePlay?.type === 'play' && <div className={`play-flight from-seat-${animatedSeat}`} key={activePlay.animationId} aria-hidden="true"><span>{activePlay.playerName}</span><CardFace card={activePlay.card} disabled /></div>}
     {wildCard && <div className="modal-backdrop" role="presentation" onClick={() => setWildCard(null)}><section className="color-modal" role="dialog" aria-modal="true" aria-labelledby="color-title" onClick={e => e.stopPropagation()}><button className="close-modal" onClick={() => setWildCard(null)}>×</button><p className="eyebrow">A WILD MOVE</p><h2 id="color-title">Choose a color</h2><p>Set the color that continues the round.</p><div className="color-options">{colors.map(color => <button key={color} className={`color-choice ${colorsClass[color]}`} onClick={() => { const selected = wildCard; setWildCard(null); play(selected, color); }}><span />{color}</button>)}</div></section></div>}
     {game.requiresOpeningColorChoice && <div className="modal-backdrop"><section className="color-modal" role="dialog" aria-modal="true" aria-labelledby="opening-color-title"><p className="eyebrow">OPENING WILD</p><h2 id="opening-color-title">Choose a color</h2><p>Choose the color before making the first play.</p><div className="color-options">{colors.map(color => <button key={color} className={`color-choice ${colorsClass[color]}`} onClick={() => chooseOpeningColor(color)} disabled={busy}><span />{color}</button>)}</div></section></div>}
-    {(game.status === 'round-complete' || game.status === 'completed') && <div className="modal-backdrop"><section className="color-modal result-modal"><div className="result-star">✳</div><p className="eyebrow">{game.status === 'completed' ? 'GAME COMPLETE' : 'ROUND COMPLETE'}</p><h2>{game.status === 'completed' ? `${game.winner || 'A player'} wins the game!` : `${game.winner} wins the round!`}</h2><div className="score-summary">{game.players.map(player => <div key={player.id}><span>{player.name}</span><b>{player.score} pts</b></div>)}</div>{game.status === 'round-complete' && (lobby?.hostPlayerId === playerId ? <button className="primary-button" onClick={() => restart(false)}>Next round <span>↻</span></button> : <p>Waiting for the host to start the next round…</p>)}{game.status === 'completed' && <button className="primary-button" onClick={() => restart(true)}>Play again <span>↻</span></button>}</section></div>}
+    {(game.status === 'round-complete' || game.status === 'completed') && <div className="modal-backdrop"><section className="color-modal result-modal"><div className="result-star">✳</div><p className="eyebrow">{game.status === 'completed' ? 'GAME COMPLETE' : 'ROUND COMPLETE'}</p><h2>{game.status === 'completed' ? `${game.winner || 'A player'} wins the game!` : `${game.winner} wins the round!`}</h2><div className="score-summary">{game.players.map(player => <div key={player.id}><span>{player.name}</span><b>{player.score} pts</b></div>)}</div>{game.status === 'round-complete' && (lobby?.hostPlayerId === playerId ? <button className="primary-button" onClick={() => restart(false)}>Next round <span>↻</span></button> : <p>Waiting for the host to start the next round…</p>)}{game.status === 'completed' && <button className="primary-button" onClick={returnToLobby}>Return to lobby <span>↩</span></button>}</section></div>}
   </main>;
 }
 
