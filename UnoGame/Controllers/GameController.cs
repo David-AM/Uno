@@ -6,7 +6,7 @@ namespace UnoGame.Api.Controllers;
 
 [ApiController]
 [Route("api/lobby")]
-public sealed class MultiplayerController(IMultiplayerLobbyService lobby) : ControllerBase
+public sealed class GameController(IMultiplayerLobbyService lobby) : ControllerBase
 {
     [HttpGet]
     public ActionResult<LobbyResponse> Get() => Ok(lobby.GetLobby());

@@ -1,6 +1,6 @@
 # Table Club UNO
 
-A browser UNO game with a JavaScript/React view and an ASP.NET Core Web API game engine. Game rules live in the C# domain layer; the API stores active games in memory and returns only the human player's hand plus public opponent counts.
+A multiplayer browser UNO game with a JavaScript/React view and an ASP.NET Core Web API plus SignalR lobby. Game rules live in the single C# game controller; the multiplayer service stores the active lobby in memory and returns only the requesting player's hand plus public opponent counts.
 
 ## Architecture
 
@@ -13,15 +13,15 @@ The domain follows the supplied [UNO class diagram](https://gist.github.com/vken
 | `Deck`, `IDeck` | `UnoGame/Models/Card.cs` | Draw pile storage |
 | `DiscardPile`, `IDiscardPile` | `UnoGame/Models/Card.cs` | Discarded cards |
 | `Table`, `ITable` | `UnoGame/Models/Card.cs` | Draw/discard piles and active color |
-| `Lobby` | `UnoGame/Models/Lobby.cs` | Diagram-compatible lobby membership and start lifecycle |
 | `GameController`, `TurnDirection` | `UnoGame/Models/GameController.cs` | Dealing, legality, effects, turn order, UNO and winner rules |
-| Game session, AI | `UnoGame/Services/GameService.cs` | In-memory lookup, human/AI orchestration and privacy-safe views |
-| REST endpoints | `UnoGame/Controllers/GamesController.cs` | Request validation and HTTP responses |
-| Request/response shapes | `UnoGame/DTOs/GameDtos.cs` | API boundary without leaking private state |
-| React view | `UnoGame.Client/src/` | Start screen, card table, controls and responsive styling |
+| Multiplayer lobby/session | `UnoGame/Services/MultiplayerLobbyService.cs` | In-memory player membership, reconnect handling and privacy-safe views |
+| Lobby REST endpoints | `UnoGame/Controllers/GameController.cs` | Lobby join, game recovery and action responses |
+| SignalR actions | `UnoGame/Hubs/MultiplayerHub.cs` | Real-time multiplayer actions and state broadcasts |
+| Request/response shapes | `UnoGame/DTOs/MultiplayerDtos.cs` and `UnoGame/DTOs/GameDtos.cs` | API boundary without leaking private state |
+| React view | `UnoGame.Client/src/` | Multiplayer lobby, card table, controls and responsive styling |
 | Rule tests | `UnoGame.Tests/` | Independent C# rule checks |
 
-REST needs a stable opaque game key, so the service uses a string game ID while preserving the diagram's integer IDs for players and lobbies. The React client is the View and the ASP.NET Core controllers are the Controller layer; game logic stays in the domain. The first version uses an in-memory singleton game service, so games reset when the API process restarts.
+The multiplayer service uses a single in-memory lobby, so the game resets when the API process restarts. SignalR broadcasts turns, plays, draws, alerts, reconnect state and lobby updates to all connected players.
 
 ## Run locally
 
@@ -49,16 +49,11 @@ All responses are JSON. Invalid actions return `400` with an `error` message; mi
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/games` | Create a game. Body: `{ "playerName": "Ada", "opponentCount": 3 }` |
-| `GET` | `/api/games/{gameId}` | Read the current public game view and the human hand |
-| `POST` | `/api/games/{gameId}/play` | Play `{ "cardId": 5, "chosenColor": "Blue" }`; `chosenColor` is needed for Wild cards |
-| `POST` | `/api/games/{gameId}/draw` | Draw a card or resolve a pending draw penalty |
-| `POST` | `/api/games/{gameId}/pass` | End the human turn after drawing |
-| `POST` | `/api/games/{gameId}/uno` | Declare UNO with one card left |
-| `POST` | `/api/games/{gameId}/catch-uno` | Catch an opponent who has one card and did not declare |
-| `POST` | `/api/games/{gameId}/restart` | Start a new round in the same game |
+| `GET` | `/api/lobby` | Read lobby membership and connection state |
+| `POST` | `/api/lobby/join` | Host or join a lobby; matching names can recover an active player |
+| `GET` | `/api/lobby/game/{playerId}` | Recover a game using the reconnect token |
 
-The AI plays legal cards, chooses its most common non-Wild color, calls UNO before playing down to one card, draws when needed, and uses the same game controller as the human. Draw Two and Wild Draw Four automatically make the next player draw the penalty cards and lose that turn. A player who goes from two cards to one without calling UNO first immediately draws four cards. The client presents penalties as SweetAlert toasts, animates each played card toward the discard pile, and automatically passes two seconds after a draw if the drawn card is not played. Wild Draw Four is restricted when the player holds a card matching the active color. Opponent hands and the draw pile contents are never included in API responses.
+Gameplay actions are sent through the SignalR hub at `/hubs/multiplayer`. Draw Two and Wild Draw Four automatically make the next player draw the penalty cards and lose that turn. A player who goes from two cards to one without calling UNO first immediately draws four cards. The client presents alerts, animates cards toward the discard pile, and shows reconnect status. Wild Draw Four is restricted when the player holds a card matching the active color. Opponent hands and draw pile contents are never included in API responses.
 
 ## Tests
 

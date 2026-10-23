@@ -14,7 +14,6 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     else policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173" , "http://192.168.137.1:5173");
     policy.AllowAnyHeader().AllowAnyMethod().AllowCredentials();
 }));
-builder.Services.AddSingleton<IGameService, GameService>();
 builder.Services.AddSingleton<IMultiplayerLobbyService, MultiplayerLobbyService>();
 builder.Services.AddHostedService<MultiplayerPresenceMonitor>();
 builder.Services.AddSignalR().AddJsonProtocol(options =>

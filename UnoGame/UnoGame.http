@@ -1,23 +1,4 @@
 @UnoGame_HostAddress = http://localhost:5124
-@GameId = replace-with-game-id
-
-POST {{UnoGame_HostAddress}}/api/games
-Content-Type: application/json
-
-{
-  "playerName": "Ada",
-  "opponentCount": 3
-}
-
-###
-
-GET {{UnoGame_HostAddress}}/api/games/{{GameId}}
-Accept: application/json
-
-###
-
-POST {{UnoGame_HostAddress}}/api/games/{{GameId}}/draw
-Accept: application/json
 
 ### Multiplayer demonstration lobby
 GET {{UnoGame_HostAddress}}/api/lobby

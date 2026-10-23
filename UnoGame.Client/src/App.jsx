@@ -35,7 +35,6 @@ function App() {
   const [connectionStatus, setConnectionStatus] = useState('offline');
   const [terminalMessage, setTerminalMessage] = useState('');
   const [rejoiningGame, setRejoiningGame] = useState(false);
-  const [mode, setMode] = useState(null);
   const [friendsRole, setFriendsRole] = useState(null);
   const [name, setName] = useState('');
   const [opponents, setOpponents] = useState(3);
@@ -60,7 +59,7 @@ function App() {
     sessionStorage.removeItem('uno.reconnectToken');
     localStorage.removeItem('uno.playerName');
     setConnection(null); setPlayerId(null); setLobby(null); setGame(null);
-    setMode(null); setFriendsRole(null); setTerminalMessage(''); setConnectionStatus('offline'); setError('');
+    setFriendsRole(null); setTerminalMessage(''); setConnectionStatus('offline'); setError('');
   };
   const leaveLobby = async () => {
     if (!connection || !playerId) returnToLobby();
@@ -82,9 +81,6 @@ function App() {
   const createGame = () => act(async () => {
     if (!name.trim()) throw new Error('Enter your name before starting or hosting a game.');
     setTerminalMessage('');
-    if (mode === 'bot') {
-      return request('/games', 'POST', { playerName: name.trim() || 'You', opponentCount: opponents });
-    }
     const joined = await request('/lobby/join', 'POST', {
       playerName: name.trim() || 'You',
       opponentCount: opponents,
@@ -121,31 +117,18 @@ function App() {
     }
   });
   const multiplayerAction = (method, ...args) => act(async () => { if (!connection) throw new Error('Connecting to the lobby…'); await connection.invoke(method, playerId, ...args); });
-  const botAction = (path, method = 'POST', body) => act(() => request(`/games/${game.gameId}${path}`, method, body));
-  const play = (card, chosenColor = null) => mode === 'bot'
-    ? botAction('/play', 'POST', { cardId: card.id, chosenColor })
-    : multiplayerAction('Play', card.id, chosenColor);
-  const draw = () => mode === 'bot' ? botAction('/draw') : multiplayerAction('Draw');
-  const pass = () => mode === 'bot' ? botAction('/pass') : multiplayerAction('Pass');
+  const play = (card, chosenColor = null) => multiplayerAction('Play', card.id, chosenColor);
+  const draw = () => multiplayerAction('Draw');
+  const pass = () => multiplayerAction('Pass');
   const uno = () => act(async () => {
-    if (mode === 'bot') await request(`/games/${game.gameId}/uno`, 'POST');
-    else await connection.invoke('SayUno', playerId);
-    if (mode === 'bot') Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'UNO called!', showConfirmButton: false, timer: 1600, timerProgressBar: true, customClass: { popup: 'uno-swal-popup', title: 'uno-swal-title' } });
+    await connection.invoke('SayUno', playerId);
     return null;
   });
-  const challengeDrawFour = () => mode === 'bot'
-    ? botAction('/challenge-draw-four')
-    : multiplayerAction('ChallengeDrawFour');
-  const chooseOpeningColor = color => mode === 'bot'
-    ? botAction('/opening-color', 'POST', { color })
-    : multiplayerAction('ChooseOpeningColor', color);
-  const catchUno = targetPlayerId => mode === 'bot'
-    ? botAction('/catch-uno', 'POST', { playerId: targetPlayerId })
-    : multiplayerAction('CatchUno', targetPlayerId);
+  const challengeDrawFour = () => multiplayerAction('ChallengeDrawFour');
+  const chooseOpeningColor = color => multiplayerAction('ChooseOpeningColor', color);
+  const catchUno = targetPlayerId => multiplayerAction('CatchUno', targetPlayerId);
   const startGame = () => multiplayerAction('Start');
-  const restart = (resetScores = false) => mode === 'bot'
-    ? botAction(`/restart?resetScores=${resetScores}`)
-    : multiplayerAction('Restart', resetScores);
+  const restart = (resetScores = false) => multiplayerAction('Restart', resetScores);
   const restartGame = async () => {
     const result = await Swal.fire({
       title: 'Restart game?',
@@ -173,7 +156,7 @@ function App() {
     setRejoiningGame(true);
     let cancelled = false;
     const hub = new HubConnectionBuilder().withUrl(HUB).withAutomaticReconnect([0, 2000, 10000, 30000]).configureLogging(LogLevel.Warning).build();
-    hub.on('lobbyUpdated', state => { setLobby(state); setMode('friends'); setFriendsRole(state?.hostPlayerId === savedPlayerId ? 'host' : 'join'); });
+    hub.on('lobbyUpdated', state => { setLobby(state); setFriendsRole(state?.hostPlayerId === savedPlayerId ? 'host' : 'join'); });
     hub.on('gameUpdated', state => { if (state) { setGame(state); setRejoiningGame(false); } });
     hub.on('actionError', setError);
     let terminal = false;
@@ -228,7 +211,7 @@ function App() {
         if (cancelled) return;
         sessionStorage.setItem('uno.playerId', String(joined.playerId));
         sessionStorage.setItem('uno.reconnectToken', joined.reconnectToken);
-        setName(savedName); setLobby(joined.lobby); setMode('friends'); setFriendsRole(joined.isHost ? 'host' : 'join'); setRejoiningGame(true);
+        setName(savedName); setLobby(joined.lobby); setFriendsRole(joined.isHost ? 'host' : 'join'); setRejoiningGame(true);
         hub = new HubConnectionBuilder().withUrl(HUB).withAutomaticReconnect([0, 2000, 10000, 30000]).configureLogging(LogLevel.Warning).build();
         hub.on('lobbyUpdated', setLobby);
         hub.on('gameUpdated', state => { if (state) { setGame(state); setRejoiningGame(false); } });
@@ -349,14 +332,13 @@ function App() {
   if (!game) return <main className="landing">
     <div className="landing-decoration decoration-one" /><div className="landing-decoration decoration-two" />
     <header className="brand clickable-brand" role="button" tabIndex="0" onClick={() => window.location.reload()} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') window.location.reload(); }}><span className="brand-mark">U</span><span>UNO <b>CIHUY</b></span></header>
-    <section className="welcome-card"><p className="eyebrow">Yang HOKI Yang Menang</p><h1>BERANI<br /><em>COBA?</em></h1><p className="intro">Lihat kartu lu, atur strategi. Bantai atau dibantai</p>{terminalMessage && <div className="error-message game-error"><p>{terminalMessage}</p><button type="button" className="subtle-button" onClick={returnToLobby}>Return to lobby</button></div>}
-      <form onSubmit={e => { e.preventDefault(); if (mode === 'bot' || (mode === 'friends' && friendsRole)) { if (hasName) createGame(); else setError('Enter your name before starting or hosting a game.'); } }}>
-        {!mode && <div className="mode-options"><p className="eyebrow">CHOOSE YOUR GAME</p><button type="button" className="primary-button" onClick={() => setMode('bot')}>Play vs bot <span>→</span></button><button type="button" className="subtle-button" onClick={() => setMode('friends')}>Play with friends</button></div>}
+    <section className="welcome-card"><p className="eyebrow">Yang HOKI Yang Menang</p><h1>HAVE<br /><em>FUN!!</em></h1><p className="intro">Lihat kartu lu, atur strategi. jadi pemenang boiii</p>{terminalMessage && <div className="error-message game-error"><p>{terminalMessage}</p><button type="button" className="subtle-button" onClick={returnToLobby}>Return to lobby</button></div>}
+      <form onSubmit={e => { e.preventDefault(); if (friendsRole) { if (hasName) createGame(); else setError('Enter your name before hosting or joining a game.'); } }}>
+        {!friendsRole && !lobby && <div className="mode-options"><p className="eyebrow">MULTIPLAYER GAME</p><button type="button" className="primary-button" onClick={() => setFriendsRole('host')}>Host a lobby <span>→</span></button><button type="button" className="subtle-button" onClick={() => setFriendsRole('join')}>Join a lobby</button></div>}
         {lobby && <div className="lobby-panel"><p className="eyebrow">DEMO LOBBY · {lobby.players.length}/{lobby.maxPlayers}</p>{lobby.players.map(player => <p key={player.id}>{player.name}{player.id === lobby.hostPlayerId ? ' · HOST' : ''}</p>)}<small>{lobby.players.length < lobby.minPlayers ? 'Waiting for at least 2 players…' : 'Ready to start'}</small>{lobby.hostPlayerId === playerId && <button type="button" className="primary-button" disabled={busy || lobby.players.length < lobby.minPlayers} onClick={startGame}>Start multiplayer game <span>↗</span></button>}<button type="button" className="subtle-button" disabled={busy} onClick={leaveLobby}>Leave lobby</button></div>}
-        {mode === 'friends' && !lobby && !friendsRole && <div className="mode-options"><p className="eyebrow">FRIENDS GAME</p><button type="button" className="primary-button" onClick={() => setFriendsRole('host')}>Host a lobby</button><button type="button" className="subtle-button" onClick={() => setFriendsRole('join')}>Join a lobby</button></div>}
-        {mode && !lobby && (mode === 'bot' || friendsRole) && <><label htmlFor="player-name">YOUR NAME</label><input id="player-name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" maxLength="24" /></>}
-        {mode && !lobby && (mode === 'bot' || friendsRole) && <>{(mode === 'bot' || friendsRole === 'host') && <><label htmlFor="opponents">OPPONENTS</label><select id="opponents" value={opponents} onChange={e => setOpponents(Number(e.target.value))}><option value="1">1 opponent</option><option value="2">2 opponents</option><option value="3">3 opponents</option></select></>}
-        {error && <p className="error-message">{error}</p>}<button className="primary-button" disabled={busy}>{busy ? (mode === 'bot' ? 'Starting game...' : friendsRole === 'host' ? 'Hosting lobby...' : 'Joining lobby...') : (mode === 'bot' ? 'Play vs bot' : friendsRole === 'host' ? 'Host lobby' : 'Join lobby')} <span>↗</span></button><button type="button" className="subtle-button" onClick={() => { setMode(null); setFriendsRole(null); }}>Choose another mode</button></>}
+        {!lobby && friendsRole && <><label htmlFor="player-name">YOUR NAME</label><input id="player-name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" maxLength="24" /></>}
+        {!lobby && friendsRole && <>{friendsRole === 'host' && <><label htmlFor="opponents">OPPONENTS</label><select id="opponents" value={opponents} onChange={e => setOpponents(Number(e.target.value))}><option value="1">1 opponent</option><option value="2">2 opponents</option><option value="3">3 opponents</option></select></>}
+        {error && <p className="error-message">{error}</p>}<button className="primary-button" disabled={busy}>{busy ? friendsRole === 'host' ? 'Hosting lobby...' : 'Joining lobby...' : friendsRole === 'host' ? 'Host lobby' : 'Join lobby'} <span>↗</span></button><button type="button" className="subtle-button" onClick={() => setFriendsRole(null)}>Choose another option</button></>}
       </form>
     </section>
   </main>;
