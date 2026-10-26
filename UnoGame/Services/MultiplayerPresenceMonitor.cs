@@ -19,11 +19,7 @@ public sealed class MultiplayerPresenceMonitor(
                 var snapshots = lobby.GetConnectedGameViews(consumeEvents: false);
                 if (expired || snapshots.Count > 0)
                 {
-                    await hubContext.Clients.Group(MultiplayerHub.Group)
-                        .SendAsync("lobbyUpdated", lobby.GetLobby(), stoppingToken);
-                    foreach (var snapshot in snapshots)
-                        await hubContext.Clients.Client(snapshot.ConnectionId)
-                            .SendAsync("gameUpdated", snapshot.Game, stoppingToken);
+                    await MultiplayerSnapshotBroadcaster.BroadcastAsync(lobby, hubContext, cancellationToken: stoppingToken, snapshots: snapshots);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }

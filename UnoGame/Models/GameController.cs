@@ -23,14 +23,9 @@ public sealed class GameController
     public const int WinningScore = 500;
     public event Action<Player>? OnTurnChanged;
     public event Action<Player, Card>? OnCardPlayed;
-    public event Action<CardColor>? OnColorChanged;
-    public event Action<Player, int>? OnCardsDrawn;
     public event Action<Player, Card>? OnCardDrawn;
-    public event Action<Player, int>? OnPenaltyCardsDrawn;
     public event Action<Player, int>? OnUnoPenalty;
-    public event Action<Player, int>? OnRoundEnded;
     public event Action<Player>? OnGameEnded;
-    public event Action<Player>? OnPlayerCardRemainOne;
     public IReadOnlyList<Player> Players => _players;
     public Table Table => _table;
     public Player? Winner { get; private set; }
@@ -55,8 +50,7 @@ public sealed class GameController
         _table = new Table(new Deck(), new DiscardPile());
     }
 
-    public void StartGame() => StartRound();
-    public void StartRound()
+    public void StartGame()
     {
         _table.DrawPile.Cards.Clear(); _table.DiscardPile.Cards.Clear();
         foreach (var hand in _cardInHands.Values) hand.Clear();
@@ -107,14 +101,13 @@ public sealed class GameController
         // A Wild Draw Four may be played provisionally. The required player can
         // challenge it, and the player's hand is checked at challenge time.
         if (card.Color == CardColor.Wild) return true;
-        return card.Color == _table.ActiveColor || (card.Value is not null && card.Value == top.Value) || (card.Action is not null && card.Action == top.Action);
+        return CardMatchesActivePlay(card, top, _table.ActiveColor);
     }
     public bool ChooseOpeningColor(Player player, CardColor color)
     {
         if (!_openingColorPending || !ReferenceEquals(GetCurrentPlayer(), player) || color is not (CardColor.Red or CardColor.Blue or CardColor.Green or CardColor.Yellow)) return false;
         _table.ActiveColor = color;
         _openingColorPending = false;
-        OnColorChanged?.Invoke(color);
         OnTurnChanged?.Invoke(player);
         return true;
     }
@@ -126,15 +119,7 @@ public sealed class GameController
         var previousActiveColor = _table.ActiveColor;
         RemoveCardFromHand(player, card); _table.DiscardPile.Cards.Add(card);
         _table.ActiveColor = card.Color == CardColor.Wild ? chosenColor!.Value : card.Color;
-        if (card.Color == CardColor.Wild) OnColorChanged?.Invoke(_table.ActiveColor);
         OnCardPlayed?.Invoke(player, card);
-        if (_cardInHands[player].Count == 1)
-        {
-            if (_hasSaidUno[player]) OnPlayerCardRemainOne?.Invoke(player);
-            // A player who reaches one card without calling UNO is vulnerable
-            // to a catch, but the penalty is not applied automatically.
-            else OnPlayerCardRemainOne?.Invoke(player);
-        }
         switch (card.Action)
         {
             case ActionType.Reverse:
@@ -168,7 +153,6 @@ public sealed class GameController
             var count = _nextDrawPenalty;
             _nextDrawPenalty = 0; _drawFourPlayer = null;
             ForceDrawCards(player, count);
-            OnPenaltyCardsDrawn?.Invoke(player, count);
             NextTurn();
             CheckGameWinner();
             return null;
@@ -177,7 +161,7 @@ public sealed class GameController
         _hasSaidUno[player] = false;
         _hasDrawnThisTurn = true;
         _drawnCardThisTurn = card;
-        if (card is not null) { OnCardDrawn?.Invoke(player, card); OnCardsDrawn?.Invoke(player, 1); }
+        if (card is not null) OnCardDrawn?.Invoke(player, card);
         return card;
     }
     public bool ChallengeDrawFour(Player challenger, out bool challengeSucceeded)
@@ -190,14 +174,12 @@ public sealed class GameController
         if (challengeSucceeded)
         {
             ForceDrawCards(playedBy, 4);
-            OnPenaltyCardsDrawn?.Invoke(playedBy, 4);
             CheckGameWinner();
             OnTurnChanged?.Invoke(GetCurrentPlayer());
         }
         else
         {
             ForceDrawCards(challenger, 6);
-            OnPenaltyCardsDrawn?.Invoke(challenger, 6);
             NextTurn();
             CheckGameWinner();
         }
@@ -216,7 +198,7 @@ public sealed class GameController
     public Player? CheckGameWinner()
     {
         var winner = _players.FirstOrDefault(p => IsEligible(p) && _cardInHands[p].Count == 0);
-        if (winner is not null) { Winner = winner; var score = _players.Where(p => IsEligible(p) && p != winner).Sum(p => _cardInHands[p].Sum(c => c.ScoreValue)); _playerScores[winner] += score; OnRoundEnded?.Invoke(winner, score); if (_playerScores[winner] >= WinningScore) { _matchEnded = true; OnGameEnded?.Invoke(winner); } }
+        if (winner is not null) { Winner = winner; var score = CalculateRoundScore(winner); _playerScores[winner] += score; if (_playerScores[winner] >= WinningScore) { _matchEnded = true; OnGameEnded?.Invoke(winner); } }
         return winner;
     }
 
@@ -256,8 +238,6 @@ public sealed class GameController
             var count = _nextDrawPenalty;
             _nextDrawPenalty = 0;
             for (var i = 0; i < count; i++) if (DrawCardFromDeckOnly(target) is { } card) OnCardDrawn?.Invoke(target, card);
-            OnCardsDrawn?.Invoke(target, count);
-            OnPenaltyCardsDrawn?.Invoke(target, count);
             MoveToNextEligible(1);
         }
         OnTurnChanged?.Invoke(GetCurrentPlayer());
@@ -271,8 +251,7 @@ public sealed class GameController
         return card;
     }
     public void ReverseTurnDirection() => _direction = _direction == TurnDirection.Clockwise ? TurnDirection.CounterClockwise : TurnDirection.Clockwise;
-    public void SkipNextTurn() => _skipNext = true;
-    public void ForceDrawCards(Player target, int count) { for (var i = 0; i < count; i++) if (DrawCardFromDeckOnly(target) is { } card) OnCardDrawn?.Invoke(target, card); OnCardsDrawn?.Invoke(target, count); }
+    public void ForceDrawCards(Player target, int count) { for (var i = 0; i < count; i++) if (DrawCardFromDeckOnly(target) is { } card) OnCardDrawn?.Invoke(target, card); }
     public bool RemoveCardFromHand(Player player, Card card) => _cardInHands.TryGetValue(player, out var hand) && hand.Remove(card);
     public bool HasCardInHand(Player player, Card card) => _cardInHands.TryGetValue(player, out var hand) && hand.Any(c => c.Id == card.Id);
     public List<Card> GetPlayerHand(Player player) => _cardInHands.TryGetValue(player, out var hand) ? hand : [];
@@ -286,14 +265,15 @@ public sealed class GameController
         return _players[index];
     }
     public Card? GetTopCard() => _table.DiscardPile.Cards.LastOrDefault();
-    public int CalculateRoundScore(Player winner) => _players.Where(p => IsEligible(p) && p != winner).Sum(p => _cardInHands[p].Sum(c => c.ScoreValue));
     public int GetPlayerScore(Player player) => _playerScores[player];
     public IReadOnlyDictionary<Player, int> GetPlayerScores() => _playerScores;
     public IReadOnlyCollection<Player> ForfeitedPlayers => _forfeitedPlayers;
     public bool IsEligible(Player player) => _players.Contains(player) && !_forfeitedPlayers.Contains(player);
     public int EligiblePlayerCount => _players.Count(IsEligible);
-    private static bool HasPlayableNonWildCard(IEnumerable<Card> hand, Card top, CardColor activeColor) => hand.Any(card => card.Color != CardColor.Wild &&
-        (card.Color == activeColor || (card.Value is not null && card.Value == top.Value) || (card.Action is not null && card.Action == top.Action)));
+    private int CalculateRoundScore(Player winner) => _players.Where(p => IsEligible(p) && p != winner).Sum(p => _cardInHands[p].Sum(c => c.ScoreValue));
+    private static bool CardMatchesActivePlay(Card card, Card top, CardColor activeColor) =>
+        card.Color == activeColor || (card.Value is not null && card.Value == top.Value) || (card.Action is not null && card.Action == top.Action);
+    private static bool HasPlayableNonWildCard(IEnumerable<Card> hand, Card top, CardColor activeColor) => hand.Any(card => card.Color != CardColor.Wild && CardMatchesActivePlay(card, top, activeColor));
     private void MoveToNextEligible(int turns)
     {
         for (var turn = 0; turn < turns; turn++) _currentPlayerIndex = FindNextEligibleIndex(_currentPlayerIndex);

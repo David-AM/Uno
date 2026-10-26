@@ -7,11 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
+var productionCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 {
     // Development clients may be opened from another device on the LAN.
     if (builder.Environment.IsDevelopment()) policy.SetIsOriginAllowed(_ => true);
-    else policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173" , "http://192.168.137.1:5173");
+    else policy.WithOrigins(productionCorsOrigins);
     policy.AllowAnyHeader().AllowAnyMethod().AllowCredentials();
 }));
 builder.Services.AddSingleton<IMultiplayerLobbyService, MultiplayerLobbyService>();

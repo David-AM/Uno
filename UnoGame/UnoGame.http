@@ -9,13 +9,7 @@ POST {{UnoGame_HostAddress}}/api/lobby/join
 Content-Type: application/json
 
 {
-  "playerName": "Ada"
+  "playerName": "Ada",
+  "hostLobby": true
 }
 
-### Start after a second browser has joined
-POST {{UnoGame_HostAddress}}/api/lobby/start
-Content-Type: application/json
-
-{
-  "playerId": 1
-}

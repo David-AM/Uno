@@ -5,9 +5,9 @@ using UnoGame.Api.Services;
 
 namespace UnoGame.Api.Hubs;
 
-public sealed class MultiplayerHub(IMultiplayerLobbyService lobby) : Hub
+public sealed class MultiplayerHub(IMultiplayerLobbyService lobby, IHubContext<MultiplayerHub> hubContext) : Hub
 {
-    public const string Group = "demo-lobby";
+    public const string Group = MultiplayerConstants.SignalRGroupName;
 
     public async Task<GameViewDto?> Register(int playerId, string reconnectToken)
     {
@@ -77,8 +77,6 @@ public sealed class MultiplayerHub(IMultiplayerLobbyService lobby) : Hub
 
     private async Task Broadcast()
     {
-        await Clients.Group(Group).SendAsync("lobbyUpdated", lobby.GetLobby());
-        foreach (var connection in lobby.GetConnectedGameViews())
-            await Clients.Client(connection.ConnectionId).SendAsync("gameUpdated", connection.Game);
+        await MultiplayerSnapshotBroadcaster.BroadcastAsync(lobby, hubContext);
     }
 }

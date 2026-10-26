@@ -27,17 +27,18 @@ public interface IMultiplayerLobbyService
     bool ProcessExpiredDisconnections();
     IReadOnlyList<(string ConnectionId, GameViewDto Game)> GetConnectedGameViews(bool consumeEvents = true);
     GameViewDto? Restart(int playerId, bool resetScores = false);
-    void RemoveDisconnectedPlayer(int playerId);
 }
 
 public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
 {
-    private const string LobbyId = "demo";
+    private const string LobbyId = MultiplayerConstants.LobbyId;
     private const int MaxOpponents = 3;
     private readonly object _gate = new();
     private readonly List<Player> _players = [];
     private readonly Dictionary<int, List<GameEventDto>> _recentEvents = [];
     private readonly Dictionary<int, ConnectionState> _connectionStates = [];
+    // ConnectionState.IsForfeited and GameController.ForfeitedPlayers are two
+    // coordinated sources of truth and must change together.
     private GameController? _game;
     private int? _hostPlayerId;
     private int _nextPlayerId = 1;
@@ -358,9 +359,8 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
         {
             if (_game is null || _players.Count == 0 || _hostPlayerId != playerId) return null;
             if (_game.IsMatchOver) return null;
-            var newMatch = resetScores || _game.IsMatchOver;
-            var previousScores = newMatch ? null : _game.GetPlayerScores();
-            _roundNumber = newMatch ? 1 : _roundNumber + 1;
+            var previousScores = resetScores ? null : _game.GetPlayerScores();
+            _roundNumber = resetScores ? 1 : _roundNumber + 1;
             foreach (var events in _recentEvents.Values) events.Clear();
             _game = new GameController(_players, previousScores: previousScores, forfeitedPlayers: _game.ForfeitedPlayers);
             WatchGameEvents(_game);
@@ -372,18 +372,6 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
             }
             QueueTableEvent();
             return View(playerId, consumeEvents: false);
-        }
-    }
-
-    public void RemoveDisconnectedPlayer(int playerId)
-    {
-        lock (_gate)
-        {
-            // Players cannot be removed safely after a game starts because the
-            // active GameController still owns their hand and turn order.
-            if (_game is not null) return;
-
-            RemovePlayerLocked(playerId);
         }
     }
 
@@ -451,9 +439,8 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
             }).ToArray(),
             game.GetPlayerHand(human).Select(CardDto.From).ToArray(),
             game.GetTopCard() is { } top ? CardDto.From(top) : null, game.GetActiveColor(),
-            game.Table.DrawPile.TotalCards, game.HasDrawnThisTurn, canChallenge, game.PendingDrawCount, openingColorPending && currentPlayer == human, game.Direction.ToString(), null, null, 0,
-            events.Where(e => e.Type == "play" && e.PlayerId is not null)
-                .Select(e => new PlayerPlayDto(e.PlayerId!.Value, e.PlayerName!, e.Card!)).ToArray(), events, _roundNumber,
+            game.Table.DrawPile.TotalCards, game.HasDrawnThisTurn, canChallenge, game.PendingDrawCount, openingColorPending && currentPlayer == human, game.Direction.ToString(),
+            events, _roundNumber,
             isPaused, pausedPlayer.Key == 0 ? null : _players.First(p => p.Id == pausedPlayer.Key).Name, remaining);
     }
 

@@ -174,16 +174,6 @@ button:disabled {
     font-size: 20px
 }
 
-.landing-note {
-    border-top: 1px solid var(--line);
-    padding-top: 18px;
-    margin: 24px 0 0;
-    text-align: center;
-    color: var(--muted);
-    font: 10px 'DM Mono', monospace;
-    letter-spacing: .06em
-}
-
 .landing footer {
     position: absolute;
     bottom: 28px;
@@ -649,31 +639,6 @@ button:disabled {
     background: #f4d84c
 }
 
-.status-line {
-    height: 46px;
-    margin: 15px auto 0;
-    padding: 0 13px;
-    width: min(560px, 100%);
-    border: 1px solid var(--line);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #c0c5ba;
-    font-size: 12px
-}
-
-.status-icon {
-    color: var(--lime);
-    font-size: 17px
-}
-
-.status-line b {
-    margin-left: auto;
-    color: var(--lime);
-    font: 9px 'DM Mono', monospace;
-    letter-spacing: .1em
-}
-
 .hand-area {
     border: 0;
     padding-top: 0;
@@ -762,17 +727,6 @@ button:disabled {
 
 .hand-cards .card-center {
     font-size: clamp(29px, 4vw, 44px)
-}
-
-.game-footer {
-    height: 43px;
-    border-top: 1px solid var(--line);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #727c71;
-    font: 8px 'DM Mono', monospace;
-    letter-spacing: .1em
 }
 
 .draw-flight {
@@ -1048,10 +1002,6 @@ button:disabled {
         gap: 5px
     }
 
-    .game-footer {
-        font-size: 7px
-    }
-
     .welcome-card {
         padding: 40px 28px 28px
     }
@@ -1107,9 +1057,6 @@ button:disabled {
         font-size: 28px
     }
 
-    .game-footer span:last-child {
-        display: none
-    }
 }
 
 .catch-button {
@@ -1128,7 +1075,7 @@ button:disabled {
 
 .catch-button:disabled {
     opacity: .4
-}.status-line.alert{border-color:#f6b94f99;background:linear-gradient(90deg,#69451c66,#211d13);color:#ffe2a4;box-shadow:0 0 24px #f6b94f1c}.status-line.alert .status-icon{color:#ffc65c}.status-line.alert b{color:#ffd17c}
+}
 
 .playing-card.symbol-action .card-center{font-size:20px}.hand-cards .playing-card.symbol-action .card-center{font-size:clamp(14.5px,2vw,22px)}.floating-alert{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:50;width:min(540px,calc(100vw - 32px));display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid #f6b94f99;background:linear-gradient(100deg,#68451ddd,#211d13ee);box-shadow:0 12px 42px #0009,0 0 26px #f6b94f2a;color:#ffe2a4;font-size:13px;font-weight:600;animation:alert-arrive .24s ease-out both;pointer-events:none}.floating-alert span{font-size:18px;color:#ffd17c}.play-flight{--flight-x:0vw;--flight-y:0vh;--flight-rotation:0deg;position:fixed;left:50%;top:48%;z-index:45;display:grid;justify-items:center;gap:8px;pointer-events:none;animation:card-flight .8s cubic-bezier(.18,.76,.24,1) both}.play-flight.from-seat-0{--flight-x:-13vw;--flight-y:39vh;--flight-rotation:-12deg}.play-flight.from-seat-1{--flight-x:-29vw;--flight-y:-31vh;--flight-rotation:10deg}.play-flight.from-seat-2{--flight-x:0vw;--flight-y:-38vh;--flight-rotation:-8deg}.play-flight.from-seat-3{--flight-x:29vw;--flight-y:-31vh;--flight-rotation:12deg}.play-flight>span{padding:5px 9px;border:1px solid #d3ee7477;border-radius:20px;background:#14251deF;color:var(--lime);font:9px 'DM Mono',monospace;letter-spacing:.07em}.play-flight .playing-card{width:76px;height:112px}.play-flight .card-center{font-size:36px}.play-flight .playing-card.symbol-action .card-center{font-size:18px}@keyframes card-flight{0%{opacity:0;transform:translate(calc(-50% + var(--flight-x)),calc(-50% + var(--flight-y))) rotate(var(--flight-rotation)) scale(.58)}18%{opacity:1}72%{opacity:1;transform:translate(-50%,-50%) rotate(0) scale(1.06)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}@keyframes alert-arrive{from{opacity:0;translate:0 -12px}to{opacity:1;translate:0 0}}@media(prefers-reduced-motion:reduce){.play-flight,.floating-alert{animation-duration:.15s}}
 
