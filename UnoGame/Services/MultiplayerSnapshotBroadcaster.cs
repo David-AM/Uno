@@ -11,7 +11,7 @@ public static class MultiplayerSnapshotBroadcaster
         IHubContext<MultiplayerHub> hubContext,
         bool consumeEvents = true,
         CancellationToken cancellationToken = default,
-        IReadOnlyList<(string ConnectionId, GameViewDto Game)>? snapshots = null)
+        IReadOnlyList<ConnectedGameSnapshot>? snapshots = null)
     {
         await hubContext.Clients.Group(MultiplayerHub.Group)
             .SendAsync("lobbyUpdated", lobby.GetLobby(), cancellationToken);
