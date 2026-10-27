@@ -1,17 +1,5 @@
 namespace UnoGame.Api.Models;
 
-public sealed class Deck : IDeck
-{
-    public List<Card> Cards { get; } = [];
-    public int TotalCards => Cards.Count;
-    public Deck() { }
-}
-
-public sealed class DiscardPile : IDiscardPile
-{
-    public List<Card> Cards { get; } = [];
-}
-
 public sealed class Table(Deck drawPile, DiscardPile discardPile) : ITable
 {
     public Deck DrawPile { get; } = drawPile;
