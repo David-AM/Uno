@@ -1,0 +1,1541 @@
+{
+  "Timestamp": "2026-10-29T06:05:15.6569962Z",
+  "Level": "Information",
+  "MessageTemplate": "UnoGame API started in {EnvironmentName} environment",
+  "RenderedMessage": "UnoGame API started in \u0022Development\u0022 environment",
+  "Properties": {},
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:16.9404994Z",
+  "Level": "Information",
+  "MessageTemplate": "Now listening on: {address}",
+  "RenderedMessage": "Now listening on: \u0022http://0.0.0.0:5124\u0022",
+  "Properties": {},
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:18.3424374Z",
+  "Level": "Information",
+  "MessageTemplate": "Application started. Press Ctrl\u002BC to shut down.",
+  "RenderedMessage": "Application started. Press Ctrl\u002BC to shut down.",
+  "Properties": {},
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:18.9786516Z",
+  "Level": "Information",
+  "MessageTemplate": "Hosting environment: {EnvName}",
+  "RenderedMessage": "Hosting environment: \u0022Development\u0022",
+  "Properties": {},
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:19.3744928Z",
+  "Level": "Information",
+  "MessageTemplate": "Content root path: {ContentRoot}",
+  "RenderedMessage": "Content root path: \u0022D:\\Formulatrix\\Bootcamp\\Project\\Uno\\UnoGame\u0022",
+  "Properties": {},
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:36.8651907Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC1"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:36.9272562Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC1"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:36.9399665Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC1"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:36.9696456Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Get\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.LobbyResponse] Get()\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC1"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:36.986787Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.LobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC1"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.0437921Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.0436797Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022 in 53.6113ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC1"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.0737156Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.0998625Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC1"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.1026684Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.1217502Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Get\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.LobbyResponse] Get()\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.114091Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 250.9277ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC1"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.1386252Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.LobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.2452622Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022 in 107.4771ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.8268149Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:37.8647905Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 821.3648ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:40.8125414Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:40.9612973Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:40.9791565Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:40.9944885Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Get\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.LobbyResponse] Get()\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.0154968Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.LobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.0270617Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022 in 11.6709ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.0452949Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.0593997Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 246.8476ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.1090237Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.1757813Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.1875171Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - 204 null null 78.4768ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.2291741Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - \u0022application/json\u0022 56",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.2484654Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.2593653Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Join (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.2878162Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Join\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.JoinLobbyResponse] Join(UnoGame.Api.DTOs.JoinLobbyRequest)\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.3443156Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.JoinLobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.3733822Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Join (UnoGame)\u0022 in 75.5575ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.3864738Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Join (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.3932459Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 164.0567ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.434279Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.4554032Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.4734247Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - 204 null null 39.1456ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC2"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.4772483Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - null 0",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC3"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.5153318Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC3"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.5242038Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022/hubs/multiplayer/negotiate\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC3"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.5468134Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022/hubs/multiplayer/negotiate\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC3"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.5568176Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer\u0022\u0022?id=25ZAbJ8Pf27-Etg4-gb2uw\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.5590871Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - 200 316 \u0022application/json\u0022 81.808ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC3"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.5605328Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:41.5731131Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022/hubs/multiplayer\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:50.9033637Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2301536Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2398835Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2416165Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Get\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.LobbyResponse] Get()\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2449694Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.LobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2470231Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022 in 2.2514ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2566033Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2596781Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 356.3007ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2694623Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.273089Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2744286Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - 204 null null 4.9494ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2807259Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - \u0022application/json\u0022 55",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2874221Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.2924531Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Join (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.3057103Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Join\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.JoinLobbyResponse] Join(UnoGame.Api.DTOs.JoinLobbyRequest)\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.3228008Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.JoinLobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.3307963Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Join (UnoGame)\u0022 in 9.338ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.343964Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Join (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.3475216Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 66.7732ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.3883417Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.4039608Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.4066385Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - 204 null null 18.2843ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.4098877Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - null 0",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.4648731Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.466072Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022/hubs/multiplayer/negotiate\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.4742508Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022/hubs/multiplayer/negotiate\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.4812454Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer\u0022\u0022?id=Q5K9uPVAIZHP6koJ_g3tTw\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC7"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.4915306Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - 200 316 \u0022application/json\u0022 81.6174ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.502919Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC7"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:51.5438109Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022/hubs/multiplayer\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC7"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:54.7752694Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:54.9290747Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:54.9313343Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:54.9391616Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Get\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.LobbyResponse] Get()\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:54.9519728Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.LobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:54.9886159Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022 in 36.7605ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:54.9919208Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:55.0028455Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:55.0134893Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:55.0192276Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 243.904ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC5"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:55.0239925Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:55.0590342Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Get\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.LobbyResponse] Get()\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:55.0724763Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.LobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:55.0878297Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022 in 15.4273ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:55.0978774Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:55.1047688Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 112.7913ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.7243857Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.7452186Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.7553284Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.7629366Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Get\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.LobbyResponse] Get()\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.7723581Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.LobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.7810743Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022 in 8.8014ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.7947219Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Get (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.8024761Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 78.1052ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.8300084Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.8512666Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.8546356Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - 204 null null 24.5422ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.8743377Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - \u0022application/json\u0022 55",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.8887125Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.8964401Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Join (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.9051883Z",
+  "Level": "Information",
+  "MessageTemplate": "Route matched with {RouteData}. Executing controller action with signature {MethodInfo} on controller {Controller} ({AssemblyName}).",
+  "RenderedMessage": "Route matched with \u0022{action = \\\u0022Join\\\u0022, controller = \\\u0022Lobby\\\u0022}\u0022. Executing controller action with signature \u0022Microsoft.AspNetCore.Mvc.ActionResult\u00601[UnoGame.Api.DTOs.JoinLobbyResponse] Join(UnoGame.Api.DTOs.JoinLobbyRequest)\u0022 on controller \u0022UnoGame.Api.Controllers.LobbyController\u0022 (\u0022UnoGame\u0022).",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.9188668Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing {ObjectResultType}, writing value of type \u0027{Type}\u0027.",
+  "RenderedMessage": "Executing \u0022OkObjectResult\u0022, writing value of type \u0027\u0022UnoGame.Api.DTOs.JoinLobbyResponse\u0022\u0027.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.9379928Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed action {ActionName} in {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Executed action \u0022UnoGame.Api.Controllers.LobbyController.Join (UnoGame)\u0022 in 19.4373ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.9460515Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022UnoGame.Api.Controllers.LobbyController.Join (UnoGame)\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.9529208Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/api/lobby/join\u0022\u0022\u0022 - 200 null \u0022application/json; charset=utf-8\u0022 78.5941ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.9813799Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:58.997955Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:59.0048194Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022OPTIONS\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - 204 null null 23.4604ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC8"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:59.0071994Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - null 0",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:59.0412801Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:59.0435499Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022/hubs/multiplayer/negotiate\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:59.056843Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022/hubs/multiplayer/negotiate\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:59.0639658Z",
+  "Level": "Information",
+  "MessageTemplate": "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}",
+  "RenderedMessage": "Request starting \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer\u0022\u0022?id=gfTjRrc6hnQiHBg5JFpQOw\u0022 - null null",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:59.0821905Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022POST\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer/negotiate\u0022\u0022?negotiateVersion=1\u0022 - 200 316 \u0022application/json\u0022 74.9553ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC6"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:59.0963341Z",
+  "Level": "Information",
+  "MessageTemplate": "CORS policy execution successful.",
+  "RenderedMessage": "CORS policy execution successful.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:05:59.1184391Z",
+  "Level": "Information",
+  "MessageTemplate": "Executing endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executing endpoint \u0027\u0022/hubs/multiplayer\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:06:01.7062666Z",
+  "Level": "Information",
+  "MessageTemplate": "Starting UNO game with {PlayerCount} players",
+  "RenderedMessage": "Starting UNO game with 3 players",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:06:01.7152238Z",
+  "Level": "Information",
+  "MessageTemplate": "UNO game started with {OpeningCard} as the opening discard and {DrawPileCount} cards remaining",
+  "RenderedMessage": "UNO game started with \u00226\u0022 as the opening discard and 86 cards remaining",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:06:04.8430524Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} played {Card}; next player is {NextPlayerId}",
+  "RenderedMessage": "Player 1 played \u00224\u0022; next player is 2",
+  "Properties": {
+    "PlayerId": 1,
+    "Card": "4",
+    "NextPlayerId": 2,
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:06:14.4421558Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} played {Card}; next player is {NextPlayerId}",
+  "RenderedMessage": "Player 2 played \u00221\u0022; next player is 3",
+  "Properties": {
+    "PlayerId": 2,
+    "Card": "1",
+    "NextPlayerId": 3,
+    "ConnectionId": "0HNPLGAJAKCC7"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:06:18.0800658Z",
+  "Level": "Warning",
+  "MessageTemplate": "Rejected card play for {PlayerId} with card {Card}",
+  "RenderedMessage": "Rejected card play for 3 with card \u00229\u0022",
+  "Properties": {
+    "PlayerId": 3,
+    "Card": "9",
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:06:19.2937682Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} drew {Card}",
+  "RenderedMessage": "Player 3 drew \u00225\u0022",
+  "Properties": {
+    "PlayerId": 3,
+    "Card": "5",
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:06:21.2250682Z",
+  "Level": "Warning",
+  "MessageTemplate": "Rejected card play for {PlayerId} with card {Card}",
+  "RenderedMessage": "Rejected card play for 3 with card \u00228\u0022",
+  "Properties": {
+    "PlayerId": 3,
+    "Card": "8",
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:06:38.02267Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} played {Card}; next player is {NextPlayerId}",
+  "RenderedMessage": "Player 1 played \u0022WildDrawFour\u0022; next player is 2",
+  "Properties": {
+    "PlayerId": 1,
+    "Card": "WildDrawFour",
+    "NextPlayerId": 2,
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:00.9735647Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} played {Card}; next player is {NextPlayerId}",
+  "RenderedMessage": "Player 3 played \u0022DrawTwo\u0022; next player is 2",
+  "Properties": {
+    "PlayerId": 3,
+    "Card": "DrawTwo",
+    "NextPlayerId": 2,
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:08.7370939Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} played {Card}; next player is {NextPlayerId}",
+  "RenderedMessage": "Player 2 played \u0022Skip\u0022; next player is 1",
+  "Properties": {
+    "PlayerId": 2,
+    "Card": "Skip",
+    "NextPlayerId": 1,
+    "ConnectionId": "0HNPLGAJAKCC7"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:16.4486786Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} played {Card}; next player is {NextPlayerId}",
+  "RenderedMessage": "Player 1 played \u00224\u0022; next player is 2",
+  "Properties": {
+    "PlayerId": 1,
+    "Card": "4",
+    "NextPlayerId": 2,
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:22.9318614Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} played {Card}; next player is {NextPlayerId}",
+  "RenderedMessage": "Player 2 played \u00224\u0022; next player is 3",
+  "Properties": {
+    "PlayerId": 2,
+    "Card": "4",
+    "NextPlayerId": 3,
+    "ConnectionId": "0HNPLGAJAKCC7"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:28.8400795Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} drew {Card}",
+  "RenderedMessage": "Player 3 drew \u0022DrawTwo\u0022",
+  "Properties": {
+    "PlayerId": 3,
+    "Card": "DrawTwo",
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:31.9159813Z",
+  "Level": "Warning",
+  "MessageTemplate": "Rejected card play for {PlayerId} with card {Card}",
+  "RenderedMessage": "Rejected card play for 3 with card \u0022DrawTwo\u0022",
+  "Properties": {
+    "PlayerId": 3,
+    "Card": "DrawTwo",
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:36.7315147Z",
+  "Level": "Information",
+  "MessageTemplate": "Player {PlayerId} drew {Card}",
+  "RenderedMessage": "Player 1 drew \u00229\u0022",
+  "Properties": {
+    "PlayerId": 1,
+    "Card": "9",
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:43.6411163Z",
+  "Level": "Information",
+  "MessageTemplate": "Application is shutting down...",
+  "RenderedMessage": "Application is shutting down...",
+  "Properties": {},
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:43.6467612Z",
+  "Level": "Information",
+  "MessageTemplate": "Connection id \u0022{ConnectionId}\u0022, Request id \u0022{TraceIdentifier}\u0022: the application aborted the connection.",
+  "RenderedMessage": "Connection id \u0022\u00220HNPLGAJAKCC9\u0022\u0022, Request id \u0022\u00220HNPLGAJAKCC9:00000001\u0022\u0022: the application aborted the connection.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:43.6636514Z",
+  "Level": "Information",
+  "MessageTemplate": "Connection id \u0022{ConnectionId}\u0022, Request id \u0022{TraceIdentifier}\u0022: the application aborted the connection.",
+  "RenderedMessage": "Connection id \u0022\u00220HNPLGAJAKCC4\u0022\u0022, Request id \u0022\u00220HNPLGAJAKCC4:00000001\u0022\u0022: the application aborted the connection.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:43.6766732Z",
+  "Level": "Information",
+  "MessageTemplate": "Connection id \u0022{ConnectionId}\u0022, Request id \u0022{TraceIdentifier}\u0022: the application aborted the connection.",
+  "RenderedMessage": "Connection id \u0022\u00220HNPLGAJAKCC7\u0022\u0022, Request id \u0022\u00220HNPLGAJAKCC7:00000001\u0022\u0022: the application aborted the connection.",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC7"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:43.6903525Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022/hubs/multiplayer\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:43.7175486Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022/hubs/multiplayer\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC7"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:43.7479489Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer\u0022\u0022?id=Q5K9uPVAIZHP6koJ_g3tTw\u0022 - 101 null null 112266.6987ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC7"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:43.7439673Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer\u0022\u0022?id=25ZAbJ8Pf27-Etg4-gb2uw\u0022 - 101 null null 122187.1403ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC4"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:43.8005394Z",
+  "Level": "Information",
+  "MessageTemplate": "Executed endpoint \u0027{EndpointName}\u0027",
+  "RenderedMessage": "Executed endpoint \u0027\u0022/hubs/multiplayer\u0022\u0027",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}
+{
+  "Timestamp": "2026-10-29T06:07:44.4161996Z",
+  "Level": "Information",
+  "MessageTemplate": "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+  "RenderedMessage": "Request finished \u0022HTTP/1.1\u0022 \u0022GET\u0022 \u0022http\u0022://\u0022localhost:5124\u0022\u0022\u0022\u0022/hubs/multiplayer\u0022\u0022?id=gfTjRrc6hnQiHBg5JFpQOw\u0022 - 101 null null 105352.2197ms",
+  "Properties": {
+    "ConnectionId": "0HNPLGAJAKCC9"
+  },
+  "Exception": null
+}

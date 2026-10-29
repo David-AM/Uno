@@ -1,3 +1,5 @@
+using Serilog;
+
 namespace UnoGame.Api.Models;
 
 public sealed class GameController
@@ -7,7 +9,6 @@ public sealed class GameController
     private readonly Dictionary<Player, int> _playerScores;
     private readonly Dictionary<Player, bool> _hasSaidUno;
     private readonly HashSet<Player> _forfeitedPlayers = [];
-    private readonly List<Card> _cards;
     private int _currentPlayerIndex;
     private TurnDirection _direction = TurnDirection.Clockwise;
     private int _nextDrawPenalty;
@@ -21,6 +22,7 @@ public sealed class GameController
     private int _nextCardId;
     private readonly Table _table;
     private readonly Random _random = new();
+    private static readonly Serilog.ILogger Logger = Log.ForContext<GameController>();
     public const int WinningScore = 500;
     public event Action<Player>? OnTurnChanged;
     public event Action<Player, Card>? OnCardPlayed;
@@ -40,7 +42,6 @@ public sealed class GameController
 
     public GameController(
         List<IPlayer> players,
-        List<ICard> cards,
         ITable table,
         IReadOnlyDictionary<Player, int>? previousScores = null,
         IReadOnlyCollection<Player>? forfeitedPlayers = null)
@@ -48,11 +49,6 @@ public sealed class GameController
         if (players is null)
         {
             throw new ArgumentNullException(nameof(players));
-        }
-
-        if (cards is null)
-        {
-            throw new ArgumentNullException(nameof(cards));
         }
 
         if (table is not Table concreteTable)
@@ -67,8 +63,6 @@ public sealed class GameController
 
         _players = players.Select(player => player as Player
             ?? throw new ArgumentException("All players must be Player instances.", nameof(players))).ToList();
-        _cards = cards.Select(card => card as Card
-            ?? throw new ArgumentException("All cards must be Card instances.", nameof(cards))).ToList();
         _cardInHands = _players.ToDictionary(p => p, _ => new List<Card>());
         _playerScores = _players.ToDictionary(p => p, p => previousScores is not null && previousScores.TryGetValue(p, out var score) ? score : 0);
         _hasSaidUno = _players.ToDictionary(p => p, _ => false);
@@ -81,6 +75,7 @@ public sealed class GameController
 
     public void StartGame()
     {
+        Logger.Information("Starting UNO game with {PlayerCount} players", _players.Count);
         _table.DrawPile.Cards.Clear();
         _table.DiscardPile.Cards.Clear();
         foreach (var hand in _cardInHands.Values)
@@ -137,6 +132,8 @@ public sealed class GameController
             ApplyOpeningCard(first);
         }
         OnTurnChanged?.Invoke(GetCurrentPlayer());
+        Logger.Information("UNO game started with {OpeningCard} as the opening discard and {DrawPileCount} cards remaining",
+            first, _table.DrawPile.Cards.Count);
     }
     private void InitializeStandardDeck()
     {
@@ -202,6 +199,7 @@ public sealed class GameController
         if (IsGameOver || !ReferenceEquals(GetCurrentPlayer(), player) || !HasCardInHand(player, card) ||
             (_hasDrawnThisTurn && (_drawnCardThisTurn is null || card.Id != _drawnCardThisTurn.Id)) || !CanPlayThisCard(card))
         {
+            Logger.Warning("Rejected card play for {PlayerId} with card {Card}", player.Id, card);
             return false;
         }
         if (card.Color == CardColor.Wild && chosenColor is not (CardColor.Red or CardColor.Blue or CardColor.Green or CardColor.Yellow))
@@ -243,12 +241,16 @@ public sealed class GameController
         }
         NextTurn();
         CheckGameWinner();
+        Logger.Information("Player {PlayerId} played {Card}; next player is {NextPlayerId}",
+            player.Id, card, GetCurrentPlayer().Id);
         return true;
     }
     public Card? DrawCard(Player player)
     {
         if (IsGameOver || !ReferenceEquals(GetCurrentPlayer(), player))
         {
+            Logger.Warning("Rejected draw request for {PlayerId}; current player is {CurrentPlayerId}",
+                player.Id, GetCurrentPlayer().Id);
             return null;
         }
         if (_nextDrawPenalty > 0)
@@ -268,6 +270,7 @@ public sealed class GameController
         if (card is not null)
         {
             OnCardDrawn?.Invoke(player, card);
+            Logger.Information("Player {PlayerId} drew {Card}", player.Id, card);
         }
         return card;
     }
@@ -330,6 +333,8 @@ public sealed class GameController
             Winner = winner;
             var score = CalculateRoundScore(winner);
             _playerScores[winner] += score;
+            Logger.Information("Round ended with winner {PlayerId}; awarded {RoundScore} points and player score is {PlayerScore}",
+                winner.Id, score, _playerScores[winner]);
             if (_playerScores[winner] >= WinningScore)
             {
                 _matchEnded = true;
@@ -364,6 +369,7 @@ public sealed class GameController
         {
             OnTurnChanged?.Invoke(GetCurrentPlayer());
         }
+        Logger.Information("Player {PlayerId} forfeited", player.Id);
         return true;
     }
     public void NextTurn()

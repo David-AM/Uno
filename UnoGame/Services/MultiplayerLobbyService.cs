@@ -30,9 +30,8 @@ public sealed class MultiplayerLobbyService : IMultiplayerLobbyService
         IReadOnlyCollection<Player>? forfeitedPlayers = null)
     {
         var players = _players.Cast<IPlayer>().ToList();
-        var cards = new List<ICard>();
         var table = new Table(new Deck(), new DiscardPile());
-        return new GameController(players, cards, table, previousScores, forfeitedPlayers);
+        return new GameController(players, table, previousScores, forfeitedPlayers);
     }
 
     private sealed class ConnectionState(string reconnectToken)
